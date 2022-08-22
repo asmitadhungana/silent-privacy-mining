@@ -10,15 +10,19 @@ async function main() {
 
   await silentToken.deployed();
 
+  const SMASP = await hre.ethers.getContractFactory("SMASP");
+  const smasp = await SMASP.deploy();
+
+  await smasp.deployed();
+
   const PrivacyMining = await hre.ethers.getContractFactory("PrivacyMining");
-  const smaspContractAddress = silentToken.address; // Dummy value for now
-  const privacyMining = await PrivacyMining.deploy(silentToken.address, smaspContractAddress);
+  const privacyMining = await PrivacyMining.deploy(silentToken.address, smasp.address);
 
   await privacyMining.deployed();
 
-  console.log(
-    `Silent Token deployed to ${silentToken.address} and PrivacyMining deployed to ${privacyMining.address}`
-  );
+  console.log(`Silent Token deployed to ${silentToken.address}.`);
+  console.log(`SMASP Contract deployed to ${smasp.address}.`);
+  console.log(`PrivacyMining deployed to ${privacyMining.address}`);
 }
 
 main().catch((error) => {
