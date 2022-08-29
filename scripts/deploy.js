@@ -1,17 +1,13 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const TWO_MONTHS_IN_SEC = 60 * 24 * 60 * 60;
-  const rewardPeriodFinish = currentTimestampInSeconds + TWO_MONTHS_IN_SEC;
-
   const SilentToken = await hre.ethers.getContractFactory("SilentToken");
   const silentToken = await SilentToken.deploy("SilentToken", "SILENT", 1000000);
 
   await silentToken.deployed();
 
-  const SMASP = await hre.ethers.getContractFactory("SMASP");
-  const smasp = await SMASP.deploy();
+  const SMSAP = await hre.ethers.getContractFactory("SMSAP");
+  const smasp = await SMSAP.deploy();
 
   await smasp.deployed();
 
