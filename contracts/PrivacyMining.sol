@@ -21,10 +21,13 @@ contract PrivacyMining is ReentrancyGuard, Pausable, Ownable {
     using SafeERC20 for IERC20;
 
     /* ========== STATE VARIABLES ========== */
-    bytes32 public constant VOUCHER_REWARD_TYPE = 0xf79b27aba54838c88035ff9fd9c8eee7bd3e841fb3aed06136ba6522c8c863af; //keccak256("VOUCHER_REWARD_TYPE");
-    bytes32 public constant STAKING_REWARD_TYPE = 0x0558e63b96f672882ddecb8628c4bf879a253f9fce5b3bbf75eeddb18e554abf; //keccak256("STAKING_REWARD_TYPE");
+
+    bytes32 public constant VOUCHER_REWARD_TYPE =
+        0xf79b27aba54838c88035ff9fd9c8eee7bd3e841fb3aed06136ba6522c8c863af; //keccak256("VOUCHER_REWARD_TYPE");
+    bytes32 public constant STAKING_REWARD_TYPE =
+        0x0558e63b96f672882ddecb8628c4bf879a253f9fce5b3bbf75eeddb18e554abf; //keccak256("STAKING_REWARD_TYPE");
     IERC20 public immutable stakingToken; // SILENT
-    address public immutable smsapContract;
+    address public immutable smaspContract;
 
     struct Pool {
         uint256 phase;
@@ -34,16 +37,15 @@ contract PrivacyMining is ReentrancyGuard, Pausable, Ownable {
     }
     // assetId => Pool
     mapping(uint256 => Pool) public pools;
-    uint256[] private deployedPools;
+    uint256[] public deployedPools;
 
     struct Reward {
         address rewardsDistributor;
         uint256 rewardsDuration;
         uint256 periodFinish;
         uint256 rewardRate;
-        uint256 lastUpdateTime; // The last time the contract was called for deposit
-        uint256 rewardPerTokenStored;   // s value = summation of rewardRate/pool.globalAssets for each reward type at each given time; 
-                                        // calculated each time an interaction is made by any user
+        uint256 lastUpdateTime;
+        uint256 rewardPerTokenStored;
     }
 
     // assetId => rewardType => Reward [VoucherReward/StakingReward]
@@ -57,24 +59,23 @@ contract PrivacyMining is ReentrancyGuard, Pausable, Ownable {
     }
 
     // userAddress => assetId => rewardType => UserPoolState
-    mapping(address => mapping(uint256 => mapping(bytes32 => UserPoolState))) public userPoolState;
+    mapping(address => mapping(uint256 => mapping(bytes32 => UserPoolState)))
+        public userPoolState;
 
-    // user => assetId => userPoolVoucherBalance [Amt of vouchers claimed by a user for a pool
-    mapping(address => mapping(uint256 => uint256)) public userPoolVoucherBalance;
-
+    // user => assetId => userPoolVoucherBalance [Amt of vouchers claimed by a user for a pool]
+    mapping(address => mapping(uint256 => uint256))
+        public userPoolVoucherBalance;
 
     /* ========== CONSTRUCTOR ========== */
 
-
-    constructor(
-        address _stakingToken,
-        address _smsapContract
-    ) {
-        require(_stakingToken != address(0) && _smsapContract != address(0), "Invalid Contract Addresses");
+    constructor(address _stakingToken, address _smaspContract) {
+        require(
+            _stakingToken != address(0) && _smaspContract != address(0),
+            "Invalid Contract Addresses"
+        );
         stakingToken = IERC20(_stakingToken);
-        smsapContract = _smsapContract;
+        smaspContract = _smaspContract;
     }
-
 
     /* ========== EXTERNAL VIEW FUNCTIONS ========== */
 
@@ -83,73 +84,126 @@ contract PrivacyMining is ReentrancyGuard, Pausable, Ownable {
         return pools[assetId].phase;
     }
 
-    // @notice fetches the total amount of Assets deposited by depositors in the SMSAP
-    function getPoolGlobalAssetsDeposits(uint256 assetId) external view returns (uint256) {
+    // @notice fetches the total amount of Assets deposited by depositors in the SMASP
+    function getPoolGlobalAssetsDeposits(uint256 assetId)
+        external
+        view
+        returns (uint256)
+    {
         return pools[assetId].globalAssetsDeposit;
     }
 
     // @notice fetches the total amount of Silent tokens staked by voucher owners in a pool
-    function getPoolGlobalSilentStaked(uint256 assetId) external view returns (uint256) {
+    function getPoolGlobalSilentStaked(uint256 assetId)
+        external
+        view
+        returns (uint256)
+    {
         return pools[assetId].globalSilentStaked;
     }
 
     // @notice fetches the total amount of Vouchers claimed by depositors from an asset pool
-    function getPoolGlobalVouchersClaimed(uint256 assetId) external view returns (uint256) {
+    function getPoolGlobalVouchersClaimed(uint256 assetId)
+        external
+        view
+        returns (uint256)
+    {
         return pools[assetId].totalVouchersClaimed;
     }
 
     // @notice fetches the amount of Assets ever deposited by the caller in a pool
-    function getuserPoolLifetimeAssetDeposits(uint256 assetId) external view returns (uint256) {
-        return userPoolState[msg.sender][assetId][VOUCHER_REWARD_TYPE].userPoolBalance;
+    function getUserPoolLifetimeAssetDeposits(uint256 assetId)
+        external
+        view
+        returns (uint256)
+    {
+        return
+            userPoolState[msg.sender][assetId][VOUCHER_REWARD_TYPE]
+                .userPoolBalance;
     }
 
     // @notice fetches the amount of Silent tokens staked by the caller in a pool
-    function getuserPoolSilentStaked(uint256 assetId) external view returns (uint256) {
-        return userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE].userPoolBalance;
+    function getUserPoolSilentStaked(uint256 assetId)
+        external
+        view
+        returns (uint256)
+    {
+        return
+            userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE]
+                .userPoolBalance;
     }
-
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-
-    // @notice registers user's deposit in SMSAP for the asset to the pool
-    // @dev revert early if the reward period has finished to save gas for user
-    function depositAssetToPool(address user, uint256 assetId, uint256 amount) external onlyPhaseOne(assetId) updateReward(user, assetId, VOUCHER_REWARD_TYPE) {
-        require(msg.sender == smsapContract, "Only SMSAP can call this");
-
+    // @notice registers user's deposit in SMASP for the asset to the pool
+    // @dev better to revert early if the reward period has finished to save gas for user
+    function depositAssetToPool(
+        address user,
+        uint256 assetId,
+        uint256 amount
+    )
+        external
+        nonReentrant
+        beforePeriodFinished(assetId, VOUCHER_REWARD_TYPE)
+        updateReward(user, assetId, VOUCHER_REWARD_TYPE)
+    {
+        require(msg.sender == smaspContract, "Only SMASP can call this");
         pools[assetId].globalAssetsDeposit += amount;
-        userPoolState[user][assetId][VOUCHER_REWARD_TYPE].userPoolBalance += amount;
+        userPoolState[user][assetId][VOUCHER_REWARD_TYPE]
+            .userPoolBalance += amount;
         emit AssetDepositedToPool(user, assetId, amount);
     }
 
     // @notice lets user stake their silent tokens to a pool
-    function stakeSilentToPool(uint256 assetId, uint256 amount) external onlyPhaseTwo(assetId) updateReward(msg.sender, assetId, STAKING_REWARD_TYPE) {
+    function stakeSilentToPool(uint256 assetId, uint256 amount)
+        external
+        nonReentrant
+        beforePeriodFinished(assetId, STAKING_REWARD_TYPE)
+        updateReward(msg.sender, assetId, STAKING_REWARD_TYPE)
+    {
         require(amount > 0, "Cannot stake 0");
-        require(userPoolVoucherBalance[msg.sender][assetId] > 0, "Only Voucher owners can stake");
-        
+        require(
+            userPoolVoucherBalance[msg.sender][assetId] > 0,
+            "Only Voucher owners can stake"
+        );
+
         pools[assetId].globalSilentStaked += amount;
-        userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE].userPoolBalance += amount;
+        userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE]
+            .userPoolBalance += amount;
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        // Assert that the total balance of PMC matches
         emit SilentStakedInPool(msg.sender, assetId, amount);
     }
 
     // @notice lets user unstake their silent tokens from a pool
-    function unstakeSilentFromPool(uint256 assetId, uint256 amount) external onlyPhaseTwo(assetId) updateReward(msg.sender, assetId, STAKING_REWARD_TYPE) {
-        require(amount > 0, "Cannot stake 0");
-        require(userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE].userPoolBalance >= amount, "Cannot unstake more than staked");
-        
+    function unstakeSilentFromPool(uint256 assetId, uint256 amount)
+        external
+        nonReentrant
+        onlyValidPhase(assetId, STAKING_REWARD_TYPE)
+        updateReward(msg.sender, assetId, STAKING_REWARD_TYPE)
+    {
+        require(amount > 0, "Cannot unstake 0");
+        require(
+            userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE]
+                .userPoolBalance >= amount,
+            "Cannot unstake more than staked"
+        );
+
         pools[assetId].globalSilentStaked -= amount;
-        userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE].userPoolBalance -= amount;
+        userPoolState[msg.sender][assetId][STAKING_REWARD_TYPE]
+            .userPoolBalance -= amount;
         stakingToken.safeTransfer(msg.sender, amount);
-        // Assert that the total balance of PMC matches
         emit SilentUnstakedFromPool(msg.sender, assetId, amount);
     }
 
     // @notice lets a user claim accumulated rewards
-    function claimRewards(uint256 assetId, bytes32 rewardType) external updateReward(msg.sender, assetId, rewardType) {
-        uint reward = userPoolState[msg.sender][assetId][rewardType].userPoolRewards;
-        
+    function claimRewards(uint256 assetId, bytes32 rewardType)
+        external
+        nonReentrant
+        updateReward(msg.sender, assetId, rewardType)
+    {
+        uint256 reward = userPoolState[msg.sender][assetId][rewardType]
+            .userPoolRewards;
+
         if (reward > 0) {
             userPoolState[msg.sender][assetId][rewardType].userPoolRewards = 0;
             if (rewardType == STAKING_REWARD_TYPE) {
@@ -163,120 +217,156 @@ contract PrivacyMining is ReentrancyGuard, Pausable, Ownable {
         }
     }
 
-
     /* ========== PUBLIC VIEW FUNCTIONS ========== */
 
-
     // @notice computes the last reward claimable time for a user
-    function lastTimeRewardApplicable(uint256 assetId, bytes32 rewardType) public view returns (uint256) {
-        return Math.min(block.timestamp, rewardForPool[assetId][rewardType].periodFinish);
+    function lastTimeRewardApplicable(uint256 assetId, bytes32 rewardType)
+        public
+        view
+        returns (uint256)
+    {
+        return
+            Math.min(
+                block.timestamp,
+                rewardForPool[assetId][rewardType].periodFinish
+            );
     }
 
-    // @notice computes the running sum of R/globalAssetsDeposit or R/globalSilentStaked
-    // @dev optimize the redundant code
-    function rewardPerToken(uint256 assetId, bytes32 rewardType) public view returns (uint256) {
-        if (rewardType == VOUCHER_REWARD_TYPE ) {
-            if (pools[assetId].globalAssetsDeposit == 0) {
-                return rewardForPool[assetId][rewardType].rewardPerTokenStored;
-            }
-            Reward memory _rewardForPool = rewardForPool[assetId][rewardType];
-
-            return _rewardForPool.rewardPerTokenStored + (
-                (lastTimeRewardApplicable(assetId, rewardType) - _rewardForPool.lastUpdateTime) * _rewardForPool.rewardRate * 1e18 / pools[assetId].globalAssetsDeposit
-            );
+    // @notice computes the running sum of R/globalAssetsDeposit or R/globalSilentStaked per second
+    function rewardPerToken(uint256 assetId, bytes32 rewardType)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 globalPoolShare;
+        if (rewardType == VOUCHER_REWARD_TYPE) {
+            globalPoolShare = pools[assetId].globalAssetsDeposit;
         } else if (rewardType == STAKING_REWARD_TYPE) {
-            if (pools[assetId].globalSilentStaked == 0) {
-                return rewardForPool[assetId][rewardType].rewardPerTokenStored;
-            }
-            Reward memory _rewardForPool = rewardForPool[assetId][rewardType];
-
-            return _rewardForPool.rewardPerTokenStored + (
-                (lastTimeRewardApplicable(assetId, rewardType) - _rewardForPool.lastUpdateTime) * _rewardForPool.rewardRate * 1e18 / (pools[assetId].globalSilentStaked * pools[assetId].totalVouchersClaimed)
-            );
+            globalPoolShare = pools[assetId].globalSilentStaked * pools[assetId].totalVouchersClaimed;
         }
+
+        if (globalPoolShare == 0) {
+            return rewardForPool[assetId][rewardType].rewardPerTokenStored;
+        }
+
+        Reward memory _rewardForPool = rewardForPool[assetId][rewardType];
+
+        return
+            _rewardForPool.rewardPerTokenStored +
+            (((lastTimeRewardApplicable(assetId, rewardType) -
+                _rewardForPool.lastUpdateTime) *
+                _rewardForPool.rewardRate *
+                1e36) / globalPoolShare);
     }
+
 
     // @notice computes the claimable rewards for a user
-    function rewardsPending(address user, uint256 assetId, bytes32 rewardType) public view returns (uint) {
-        UserPoolState memory _userPoolState = userPoolState[user][assetId][rewardType];
+    function rewardsPending(
+        address user,
+        uint256 assetId,
+        bytes32 rewardType
+    ) public view returns (uint256) {
+        UserPoolState memory _userPoolState = userPoolState[user][assetId][
+            rewardType
+        ];
         uint256 userEffectivePoolShare;
-        if ( rewardType == STAKING_REWARD_TYPE) {
-            userEffectivePoolShare = _userPoolState.userPoolBalance * userPoolVoucherBalance[user][assetId];
+        if (rewardType == STAKING_REWARD_TYPE) {
+            userEffectivePoolShare =
+                _userPoolState.userPoolBalance *
+                userPoolVoucherBalance[user][assetId];
         } else {
             userEffectivePoolShare = _userPoolState.userPoolBalance;
         }
         // k*(s-p[user])
-        return (
-            userEffectivePoolShare * (rewardPerToken(assetId, rewardType) - _userPoolState.userPoolRewardPerTokenPaid) / 1e18
-        ) + _userPoolState.userPoolRewards;
+        return
+            ((userEffectivePoolShare *
+                (rewardPerToken(assetId, rewardType) -
+                    _userPoolState.userPoolRewardPerTokenPaid)) / 1e36) +
+            _userPoolState.userPoolRewards;
     }
-    
 
     /* ========== MODIFIERS ========== */
 
-
     // @notice updates the reward each time any user interacts with the SC [ deposit, stake, unstake, claim]
-    modifier updateReward(address user, uint256 assetId, bytes32 rewardType) {
-        if (block.timestamp > rewardForPool[assetId][rewardType].periodFinish) revert RewardPeriodFinished();
+    modifier updateReward(
+        address user,
+        uint256 assetId,
+        bytes32 rewardType
+    ) {
         // Update the reward
-        rewardForPool[assetId][rewardType].rewardPerTokenStored = rewardPerToken(assetId, rewardType); // need to change here conditionally
-        rewardForPool[assetId][rewardType].lastUpdateTime = lastTimeRewardApplicable(assetId, rewardType);
+        rewardForPool[assetId][rewardType]
+            .rewardPerTokenStored = rewardPerToken(assetId, rewardType);
+        rewardForPool[assetId][rewardType]
+            .lastUpdateTime = lastTimeRewardApplicable(assetId, rewardType);
 
         if (user != address(0)) {
-             // compute the amount of token that the user can claim so far and store the o/p in the rewards of the user
-            userPoolState[user][assetId][rewardType].userPoolRewards = rewardsPending(user, assetId, rewardType);
-            // lastly, update the userRewardPerTokenPaid of the user for the assetId setting to it to rewardPerTokenStored for the asset computed above
-            userPoolState[user][assetId][rewardType].userPoolRewardPerTokenPaid = rewardForPool[assetId][rewardType].rewardPerTokenStored;
+            // compute the pending rewards for the user store it in `userPoolRewards`
+            userPoolState[user][assetId][rewardType]
+                .userPoolRewards = rewardsPending(user, assetId, rewardType);
+            
+            userPoolState[user][assetId][rewardType]
+                .userPoolRewardPerTokenPaid = rewardForPool[assetId][rewardType]
+                .rewardPerTokenStored;
         }
         _;
     }
 
-    modifier onlyPhaseOne(uint256 assetId) {
-        if (pools[assetId].phase != 1) revert OnlyCallableInPhaseOne();
+    modifier onlyValidPhase(uint256 assetId, bytes32 rewardType) {
+        if (rewardType == VOUCHER_REWARD_TYPE && pools[assetId].phase != 1)
+            revert OnlyCallableInPhaseOne();
+        else if (rewardType == STAKING_REWARD_TYPE && pools[assetId].phase != 2)
+            revert OnlyCallableInPhaseTwo();
         _;
     }
 
-    modifier onlyPhaseTwo(uint256 assetId) {
-        if (pools[assetId].phase != 2) revert OnlyCallableInPhaseTwo();
+    modifier beforePeriodFinished(uint256 assetId, bytes32 rewardType) {
+        if (block.timestamp > rewardForPool[assetId][rewardType].periodFinish)
+            revert RewardPeriodFinished();
         _;
     }
-
 
     /* ========== GLOBAL FUNCTIONS ========== */
-
 
     // @notice fetches information of all assset reward pools ever created in the PMC
     function getDeployedPools() external view returns (Pool[] memory) {
         uint256 deployedPoolsLength = deployedPools.length;
         uint256 i;
         Pool[] memory pool = new Pool[](deployedPoolsLength);
-        for (i=0; i<deployedPoolsLength; i++) {
+        for (i = 0; i < deployedPoolsLength; i++) {
             pool[i] = pools[deployedPools[i]];
         }
         return pool;
     }
 
-
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    // @notice lets the owner of the pool (or maybe SMSAP?) create a new Asset-Reward Pool of rewardType
-    // @dev rewardRate at the moment can't handle floating point value | Extend the function for updating rewards
-    function createAssetRewardPool(uint256 assetId, bytes32 rewardType, uint256 reward, uint256 rewardsDuration) external onlyOwner {
+    // @notice lets the owner of the pool create a new Asset-Reward Pool of rewardType
+    // @dev Extend the function for updating rewards
+    function createAssetRewardPool(
+        uint256 assetId,
+        bytes32 rewardType,
+        uint256 reward,
+        uint256 rewardsDuration
+    ) external onlyOwner {
         if (rewardType == VOUCHER_REWARD_TYPE) {
             require(pools[assetId].phase == 0, "Asset pool already created");
             pools[assetId].phase = 1;
             deployedPools.push(assetId);
         } else if (rewardType == STAKING_REWARD_TYPE) {
-            require(block.timestamp >= rewardForPool[assetId][VOUCHER_REWARD_TYPE].periodFinish, "Phase One Ongoing");
+            if (
+                block.timestamp <
+                rewardForPool[assetId][VOUCHER_REWARD_TYPE].periodFinish
+            ) revert("Phase One Ongoing");
             if (pools[assetId].phase != 1) revert OnlyCallableInPhaseOne();
             pools[assetId].phase = 2;
-            // Transfer totalSilentRewards from the owner to the contract [?]
+            // Transfer totalSilentRewards from the owner to the contract
+            stakingToken.safeTransferFrom(msg.sender, address(this), reward);
         } else {
             revert();
         }
 
         // compute the rewardRate
-        uint256 rewardRate = reward/rewardsDuration;
+        uint256 rewardRate = reward / rewardsDuration;
 
         // Initialize the Voucher rewards for the pool
         rewardForPool[assetId][rewardType] = Reward(
@@ -290,28 +380,63 @@ contract PrivacyMining is ReentrancyGuard, Pausable, Ownable {
         emit RewardAdded(assetId, rewardType, reward);
     }
 
-    // @notice lets the rewardDistributor of an asset reward pool initialize a new reward period
-    function setRewardsDuration(uint256 assetId, bytes32 rewardType, uint256 rewardsDuration) external {
-        if (rewardType == VOUCHER_REWARD_TYPE) {
-            if (pools[assetId].phase != 1) revert OnlyCallableInPhaseOne();
-        } else {
-            if (pools[assetId].phase != 2) revert OnlyCallableInPhaseTwo();
+    function updateRewardRate(
+        uint256 assetId,
+        bytes32 rewardType,
+        uint256 newRewardRate
+    )
+        external
+        onlyOwner
+        beforePeriodFinished(assetId, rewardType)
+        updateReward(address(0), assetId, rewardType)
+    {
+        require(newRewardRate > 0, "Reward rate cannot be zero");
+        Reward memory _rewardForPool = rewardForPool[assetId][rewardType];
+        
+        if (rewardType == STAKING_REWARD_TYPE) {
+            if (newRewardRate > _rewardForPool.rewardRate) {
+                uint256 remainingPeriod = _rewardForPool.periodFinish - block.timestamp;
+                uint256 addedReward = newRewardRate * remainingPeriod;
+                stakingToken.safeTransferFrom(msg.sender, address(this), addedReward);
+            }
         }
-        require(
-            block.timestamp > rewardForPool[assetId][rewardType].periodFinish,
-            "Reward period still active"
-        );
-        require(rewardForPool[assetId][rewardType].rewardsDistributor == msg.sender, "Caller Not RewardsDistributor");
-        require(rewardsDuration > 0, "Reward duration must be non-zero");
-        rewardForPool[assetId][rewardType].rewardsDuration = rewardsDuration;
+
+        rewardForPool[assetId][rewardType].rewardRate = newRewardRate;
+        emit RewardRateUpdated(assetId, rewardType, newRewardRate);
     }
 
     /* ========== EVENTS ========== */
 
-    event RewardAdded(uint256 indexed assetId, bytes32 indexed rewardType, uint256 indexed reward);
-    event AssetDepositedToPool(address indexed user, uint256 indexed assetId, uint256 indexed amount); // Single Event for AssetDeposit and SilentStaked [?]
-    event SilentStakedInPool(address indexed user, uint256 assetId, uint256 amount);
-    event SilentUnstakedFromPool(address indexed user, uint256 assetId, uint256 amount);
-    event RewardPaid(address indexed user, uint256 indexed assetId, bytes32 rewardType, uint256 indexed reward);
-    event RewardsDurationUpdated(uint256 assetId, bytes32 rewardType, uint256 rewardsDuration, uint256 rewardRate);
+    event RewardAdded(
+        uint256 indexed assetId,
+        bytes32 indexed rewardType,
+        uint256 indexed reward
+    );
+    event AssetDepositedToPool(
+        address indexed user,
+        uint256 indexed assetId,
+        uint256 indexed amount
+    );
+    event SilentStakedInPool(
+        address indexed user,
+        uint256 assetId,
+        uint256 amount
+    );
+    event SilentUnstakedFromPool(
+        address indexed user,
+        uint256 assetId,
+        uint256 amount
+    );
+    event RewardPaid(
+        address indexed user,
+        uint256 indexed assetId,
+        bytes32 rewardType,
+        uint256 indexed reward
+    );
+
+    event RewardRateUpdated(
+        uint256 assetId,
+        bytes32 rewardType,
+        uint256 newRewardRate
+    );
 }
