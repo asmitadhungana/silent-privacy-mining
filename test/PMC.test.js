@@ -9,7 +9,7 @@ const {ZERO_ADDRESS} = constants;
 const {expect} = require("chai");
 const {toWei, fromWei} = require('web3-utils');
 
-const {VOUCHER_REWARD_TYPE, STAKING_REWARD_TYPE, ONE_MONTH} = require('./helpers/constants');
+const {ONE_MONTH} = require('./helpers/constants');
 
 const toBN = v => ethers.BigNumber.from(v.toString());
 const toUnit = amount => toBN(toWei(amount.toString(), 'ether'));
@@ -19,6 +19,10 @@ describe("PMC", () => {
   let silentToken;
   let smasp;
   let privacyMining;
+  let tokens = ["weth", "dai", "usdc"];
+  let _tokens = [];
+  let assetIds = [];
+
 
   let ONE_BILLION = toUnit('1000000000');
 
@@ -27,22 +31,30 @@ describe("PMC", () => {
 
   const doDeployDependentContracts = async () => {
     [deployer, assetOwner1, assetOwner2] = await ethers.getSigners();
-
-    // Deploy Silent Token
+    
+    // Deploy Asset Tokens [ERC20]
+    for (i = 0; i < 3; i++) {
+      const Token = await hre.ethers.getContractFactory("SilentToken");
+      _tokens[i] = await Token.deploy(tokens[i], tokens[i], 100000000);
+  
+      await _tokens[i].deployed();
+    }
+  
+    // 2. Deploy Silent Token
     const SilentToken = await hre.ethers.getContractFactory("SilentToken");
     // ONE_BILLION IS ALREADY IN WEI, THIS WILL BE AGAIN powered by 1e18 below
     silentToken = await SilentToken.deploy("SilentToken", "SILENT", ONE_BILLION);
     await silentToken.deployed();
-
-    // Deploy SMASP contract
+  
+    // 3. Deploy SMASP contract
     const SMASP = await hre.ethers.getContractFactory("SMASP");
     smasp = await SMASP.deploy();
     await smasp.deployed();
   }
     
-  const doDeployPMC = async (silentTokenAddress, smaspAddress) => {
+  const doDeployPMC = async (silentTokenAddress, smaspAddress, _rewardsDistributorAddress) => {
     const PrivacyMining = await hre.ethers.getContractFactory("PrivacyMining");
-    privacyMining = await PrivacyMining.deploy(silentTokenAddress, smaspAddress);
+    privacyMining = await PrivacyMining.deploy(silentTokenAddress, smaspAddress, _rewardsDistributorAddress);
     await privacyMining.deployed();
     return {privacyMining};
   }
@@ -51,10 +63,34 @@ describe("PMC", () => {
     await smasp.connect(deployer).addPrivacyMiningContract(privacyMining.address);
   }
 
-  const doCreateAssetRewardPool = async (_assetId, _rewardType, _reward, _rewardsDuration) => {
+  // Create asset pools in SMASP
+  const smasp_addAssetPools = async () => {
+    for (i = 0; i < 3; i++) {
+      await smasp.connect(deployer).createAssetPool(_tokens[i].address);
+
+      const Token = await hre.ethers.getContractFactory("SilentToken");
+      _tokens[i] = await Token.deploy(tokens[i], tokens[i], 100000000);
+
+      await _tokens[i].deployed();
+
+      // Fetch the name of the Asset from its ERC20 Contract
+      const tokenContract = await hre.ethers.getContractFactory("SilentToken");
+      const tokenInstance = tokenContract.attach(_tokens[i].address);
+
+      // Log the newly created asset pool name on the console
+      console.log(`SMASP: Asset Pools added for ${ await tokenInstance.name()}`);
+
+      const hex = ethers.utils.hexZeroPad(_tokens[i].address, 32);
+      assetIds[i] = toBN((_tokens[i].address).toString());
+      console.log(assetIds[i]);
+    }
+  }
+
+
+  const doCreateAssetRewardPool = async (_assetId, _phase, _reward, _rewardsDuration) => {
     await privacyMining.connect(deployer).createAssetRewardPool(
       _assetId,
-      _rewardType,
+      _phase,
       _reward,
       _rewardsDuration
     );
@@ -70,24 +106,25 @@ describe("PMC", () => {
   const createVoucherRewardPoolFixture = async() => {
     [deployer, assetOwner1, assetOwner2] = await ethers.getSigners();
     const rewardPool = {
-      assetId: 1,
-      rewardType: VOUCHER_REWARD_TYPE,
+      assetId: toBN('0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e'), // Asset reward pool for weth
+      phase: 1,
       reward: ONE_BILLION,
       rewardsDuration: ONE_MONTH
     }
-
+  
     await doDeployDependentContracts();
-    await doDeployPMC(silentToken.address, smasp.address);
+    await doDeployPMC(silentToken.address, smasp.address, _rewardsDistributorAddress = deployer.address);
     await smasp.addPrivacyMiningContract(privacyMining.address);
+    await smasp_addAssetPools();
     await privacyMining.createAssetRewardPool(
       rewardPool.assetId, 
-      rewardPool.rewardType, 
+      rewardPool.phase, 
       rewardPool.reward, 
       rewardPool.rewardsDuration
     );
-
+  
     const phaseOnePeriodFinish = (await time.latest()) + rewardPool.rewardsDuration;
-
+  
     return { rewardPool, phaseOnePeriodFinish, deployer, assetOwner1, assetOwner2 };
   }
 
@@ -105,7 +142,6 @@ describe("PMC", () => {
     // claim voucher rewards from pool
     await privacyMining.connect(assetOwner1).claimRewards(
       rewardPool.assetId, 
-      rewardPool.rewardType
     );
 
     return {rewardPool, depositAmount, phaseOnePeriodFinish, deployer, assetOwner1, assetOwner2};
@@ -118,7 +154,7 @@ describe("PMC", () => {
 
     const stakingRewardPool = {
       assetId: rewardPool.assetId,
-      rewardType: STAKING_REWARD_TYPE,
+      phase: 2,
       reward: ONE_BILLION,
       rewardsDuration: ONE_MONTH
     }
@@ -129,7 +165,7 @@ describe("PMC", () => {
     // DEPLOYER: CREATES THE STAKING REWARD POOL
     await doCreateAssetRewardPool(
       stakingRewardPool.assetId, 
-      stakingRewardPool.rewardType, 
+      stakingRewardPool.phase, 
       stakingRewardPool.reward, 
       stakingRewardPool.rewardsDuration
     );
@@ -161,17 +197,18 @@ describe("PMC", () => {
   describe('constructor()', () => {
     beforeEach(async () => {
       [deployer, assetOwner1, assetOwner2] = await ethers.getSigners();
+      this.deployer = deployer;
       await doDeployDependentContracts();
     });
 
     it('should revert for zero addresses for dependent contracts', async () => {
       await expect(
-        doDeployPMC(ZERO_ADDRESS, ZERO_ADDRESS)
-      ).to.be.revertedWith('Invalid Contract Addresses');
+        doDeployPMC(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS)
+      ).to.be.reverted;
     });
 
     it('should set the correct state variables', async () => {
-      await doDeployPMC(silentToken.address, smasp.address);
+      await doDeployPMC(silentToken.address, smasp.address, _rewardsDistributorAddress = this.deployer.address);
       expect (await privacyMining.smaspContract()).to.eq(smasp.address);
       // smasp contract [?]
     });
@@ -181,21 +218,22 @@ describe("PMC", () => {
   describe('createAssetRewardPool()', () => {
     beforeEach(async () => {
       await doDeployDependentContracts();
-      await doDeployPMC(silentToken.address, smasp.address);
+      await doDeployPMC(silentToken.address, smasp.address, _rewardsDistributorAddress = silentToken.address);
       await doSetPmcInSMASP();
+      await smasp_addAssetPools();
     });
 
     it('should let the owner create a new asset reward pool', async () => {
       const rewardPool = {
-        assetId: 1,
-        rewardType: VOUCHER_REWARD_TYPE,
+        assetId: assetIds[0],
+        phase: 1,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
 
       await privacyMining.createAssetRewardPool(
         rewardPool.assetId,
-        rewardPool.rewardType,
+        rewardPool.phase,
         rewardPool.reward,
         rewardPool.rewardsDuration
       );
@@ -204,50 +242,50 @@ describe("PMC", () => {
     it('shouldn\'t let two pools to be created for the same assetId', async() => {
       // Step 1. Create a reward pool for assetId = 1
       const rewardPool = {
-        assetId: 1,
-        rewardType: VOUCHER_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 1,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
       await privacyMining.createAssetRewardPool(
         rewardPool.assetId,
-        rewardPool.rewardType,
+        rewardPool.phase,
         rewardPool.reward,
         rewardPool.rewardsDuration
       );
 
       // Step 2. ReCreate a reward pool for assetId = 1
       const _rewardPool = {
-        assetId: 1,
-        rewardType: VOUCHER_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 1,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
       await expect (
         privacyMining.createAssetRewardPool(
           _rewardPool.assetId,
-          _rewardPool.rewardType,
+          _rewardPool.phase,
           _rewardPool.reward,
           _rewardPool.rewardsDuration
         )
       ).to.be.revertedWith('Asset pool already created');
 
       await expect(
-        doDeployPMC(ZERO_ADDRESS, ZERO_ADDRESS)
+        doDeployPMC(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS)
       ).to.be.revertedWith('Invalid Contract Addresses');
     });
 
     it('should initialize the phase of a new asset reward pool as 1', async() => {
       const rewardPool = {
-        assetId: 1,
-        rewardType: VOUCHER_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 1,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       };
 
       await doCreateAssetRewardPool(
         rewardPool.assetId,
-        rewardPool.rewardType,
+        rewardPool.phase,
         rewardPool.reward,
         rewardPool.rewardsDuration
       );
@@ -258,8 +296,8 @@ describe("PMC", () => {
 
     it('should add the newly deployed reward pool\'s `assetId` to the deployedPools list', async() => {
       const rewardPool = {
-        assetId: 1,
-        rewardType: VOUCHER_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 1,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -267,7 +305,7 @@ describe("PMC", () => {
       // console.log(ethers.utils.formatBytes32String("Silent"));
       await doCreateAssetRewardPool(
         rewardPool.assetId,
-        rewardPool.rewardType,
+        rewardPool.phase,
         rewardPool.reward,
         rewardPool.rewardsDuration
       );
@@ -280,8 +318,8 @@ describe("PMC", () => {
     // STAKING REWARD POOL
     it('shouldn\'t let staking reward pool to be created before voucher reward pool', async() => {
       const rewardPool_staking = {
-        assetId: 1,
-        rewardType: STAKING_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 2,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -289,7 +327,7 @@ describe("PMC", () => {
       await expect( 
         doCreateAssetRewardPool(
           rewardPool_staking.assetId,
-          rewardPool_staking.rewardType,
+          rewardPool_staking.phase,
           rewardPool_staking.reward,
           rewardPool_staking.rewardsDuration
         )
@@ -303,8 +341,8 @@ describe("PMC", () => {
       await time.increaseTo(phaseOnePeriodFinish + 1);
 
       rewardPool_staking = {
-        assetId: 1,
-        rewardType: STAKING_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 2,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -316,7 +354,7 @@ describe("PMC", () => {
       await( 
         doCreateAssetRewardPool(
           rewardPool_staking.assetId,
-          rewardPool_staking.rewardType,
+          rewardPool_staking.phase,
           rewardPool_staking.reward,
           rewardPool_staking.rewardsDuration
         )
@@ -332,8 +370,8 @@ describe("PMC", () => {
       await time.increaseTo(phaseOnePeriodFinish + 1);
 
       rewardPool_staking = {
-        assetId: 1,
-        rewardType: STAKING_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 2,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -345,7 +383,7 @@ describe("PMC", () => {
       await( 
         doCreateAssetRewardPool(
           rewardPool_staking.assetId,
-          rewardPool_staking.rewardType,
+          rewardPool_staking.phase,
           rewardPool_staking.reward,
           rewardPool_staking.rewardsDuration
         )
@@ -362,8 +400,8 @@ describe("PMC", () => {
       await time.increaseTo(phaseOnePeriodFinish);
 
       rewardPool_staking = {
-        assetId: 1,
-        rewardType: STAKING_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 2,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -375,15 +413,14 @@ describe("PMC", () => {
       await( 
         doCreateAssetRewardPool(
           rewardPool_staking.assetId,
-          rewardPool_staking.rewardType,
+          rewardPool_staking.phase,
           rewardPool_staking.reward,
           rewardPool_staking.rewardsDuration
         )
       );
 
       const _rewardForPool = await privacyMining.rewardForPool(
-        rewardPool_staking.assetId, 
-        rewardPool_staking.rewardType
+        rewardPool_staking.assetId
       );
 
       expect (_rewardForPool.rewardsDistributor).to.eq(deployer.address);
@@ -402,8 +439,8 @@ describe("PMC", () => {
       await time.increaseTo(phaseOnePeriodFinish);
 
       rewardPool_staking = {
-        assetId: 1,
-        rewardType: STAKING_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 2,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -415,23 +452,23 @@ describe("PMC", () => {
       await expect(
         privacyMining.createAssetRewardPool(
           rewardPool_staking.assetId,
-          rewardPool_staking.rewardType,
+          rewardPool_staking.phase,
           rewardPool_staking.reward,
           rewardPool_staking.rewardsDuration
         )
       ).to.emit(privacyMining, "RewardAdded")
-      .withArgs(rewardPool_staking.assetId, rewardPool_staking.rewardType, rewardPool_staking.reward);
+      .withArgs(rewardPool_staking.assetId, rewardPool_staking.phase, rewardPool_staking.reward);
       
     });
 
-    it('should revert if the provided rewardType isn\'t the predesignated types', async() => {
+    it('should revert if the provided phase isn\'t the predesignated types', async() => {
       const {phaseOnePeriodFinish} = await createVoucherRewardPoolFixture();
       
       await time.increaseTo(phaseOnePeriodFinish);
 
       rewardPool_staking = {
-        assetId: 1,
-        rewardType: STAKING_REWARD_TYPE,
+        assetId: _tokens[0].address,
+        phase: 2,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -443,7 +480,7 @@ describe("PMC", () => {
       await expect( 
         doCreateAssetRewardPool(
           rewardPool_staking.assetId,
-          ethers.utils.formatBytes32String("Silent"),
+          3,
           rewardPool_staking.reward,
           rewardPool_staking.rewardsDuration
         )
@@ -464,7 +501,7 @@ describe("PMC", () => {
       await expect(
         privacyMining.connect(deployer).depositAssetToPool(
           user = deployer.address, 
-          assetId = 1, 
+          assetId = _tokens[0].address,
           amount = toUnit('100')
         )
       ).to.be.revertedWith("Only SMASP can call this");
@@ -486,7 +523,7 @@ describe("PMC", () => {
 
       await expect(
         smasp.connect(this.assetOwner1).depositAsset(
-          assetId = 1, 
+          assetId = _tokens[0].address,
           amount = toUnit('100')
         )
       ).to.be.revertedWithCustomError(privacyMining, "RewardPeriodFinished");
@@ -499,7 +536,7 @@ describe("PMC", () => {
 
       rewardPool_staking = {
         assetId: this.rewardPool.assetId,
-        rewardType: STAKING_REWARD_TYPE,
+        phase: 2,
         reward: ONE_BILLION,
         rewardsDuration: ONE_MONTH
       }
@@ -511,7 +548,7 @@ describe("PMC", () => {
       await( 
         doCreateAssetRewardPool(
           rewardPool_staking.assetId,
-          rewardPool_staking.rewardType,
+          rewardPool_staking.phase,
           rewardPool_staking.reward,
           rewardPool_staking.rewardsDuration
         )
@@ -550,8 +587,7 @@ describe("PMC", () => {
 
       const _userPoolState = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
       expect(_userPoolState.userPoolBalance).to.eq(amount);
     });
@@ -565,8 +601,7 @@ describe("PMC", () => {
 
       const _userPoolState = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
       expect(_userPoolState.userPoolBalance).to.eq(amount);
 
@@ -578,8 +613,7 @@ describe("PMC", () => {
 
       const _userPoolState_sub = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(
@@ -606,8 +640,7 @@ describe("PMC", () => {
       );
 
       const _rewardForPool = await privacyMining.rewardForPool(
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(_rewardForPool.rewardPerTokenStored).to.eq(0);
@@ -621,8 +654,7 @@ describe("PMC", () => {
       );
 
       const rewardForPool_before = await privacyMining.rewardForPool(
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect (rewardForPool_before.rewardPerTokenStored).to.eq(0);
@@ -637,8 +669,7 @@ describe("PMC", () => {
       );
 
       const rewardForPool_after = await privacyMining.rewardForPool(
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(rewardForPool_after.rewardPerTokenStored).to.be.gt(0);
@@ -653,8 +684,7 @@ describe("PMC", () => {
   
       const userPoolState_before = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
   
       expect (userPoolState_before.userPoolRewards).to.eq(0);
@@ -670,8 +700,7 @@ describe("PMC", () => {
 
       const userPoolState_after = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
   
       expect (userPoolState_after.userPoolRewards).to.be.gt(0);
@@ -685,8 +714,7 @@ describe("PMC", () => {
 
       const _userPoolState = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(_userPoolState.userPoolRewardPerTokenPaid).to.eq(0);
@@ -701,8 +729,7 @@ describe("PMC", () => {
 
       const userPoolState_before = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(userPoolState_before.userPoolRewardPerTokenPaid).to.eq(0);
@@ -715,8 +742,7 @@ describe("PMC", () => {
 
       const userPoolState_after = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(userPoolState_after.userPoolRewardPerTokenPaid).to.be.gt(0);
@@ -832,7 +858,7 @@ describe("PMC", () => {
       expect (_pool.globalSilentStaked).to.eq(silentStakingAmount);
     });
 
-    it('SUCCESS: should update the `userPoolBalance` for STAKING_REWARD_TYPE', async () => {
+    it('SUCCESS: should update the `userPoolBalance` for 2', async () => {
       // USER: Approves SILENT tokens for spending
       const silentStakingAmount = toUnit('1000');
       await doApprovePmcForTokenSpending(assetOwner1, silentStakingAmount);
@@ -846,8 +872,7 @@ describe("PMC", () => {
       // FETCH the pool
       const _userStateForPool = await privacyMining.userPoolState(
         this.assetOwner1.address, 
-        this.rewardPool.assetId, 
-        STAKING_REWARD_TYPE
+        this.rewardPool.assetId
       );
       
       expect (_userStateForPool.userPoolBalance).to.eq(silentStakingAmount);
@@ -1004,12 +1029,11 @@ describe("PMC", () => {
       expect (__poolGlobalSilentStaked_after).to.eq( _poolGlobalSilentStaked_before - unstakingAmount);
     });
 
-    it('SUCCESS: should update the `userPoolBalance` for STAKING_REWARD_TYPE', async () => {
+    it('SUCCESS: should update the `userPoolBalance` for 2', async () => {
       // CHECK: userPoolBalance for user before unstaking
       const _userPoolState_before = await privacyMining.userPoolState(
         this.assetOwner1.address, 
-        this.stakingRewardPool.assetId, 
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId
       );
       const _userPoolBalance_before = parseInt(
         fromUnit(_userPoolState_before.userPoolBalance.toString())
@@ -1032,7 +1056,7 @@ describe("PMC", () => {
       const _userPoolState_after = await privacyMining.userPoolState(
         this.assetOwner1.address, 
         this.stakingRewardPool.assetId, 
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.phase
       );
       const _userPoolBalance_after = parseInt(
         fromUnit(_userPoolState_after.userPoolBalance.toString())
@@ -1135,7 +1159,7 @@ describe("PMC", () => {
       // USER: CLAIMS REWARD FOR A DEPLOYED REWARD POOL
       const tx_deployed_pool = await privacyMining.connect(this.assetOwner1).claimRewards(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
       const receipt_before = await tx_deployed_pool.wait();
       const gasUsed_before = parseInt(receipt_before.gasUsed);
@@ -1151,7 +1175,7 @@ describe("PMC", () => {
       // USER: CLAIMS REWARD FOR AN UNDEPLOYED REWARD POOL
       const tx_undeployed_pool = await privacyMining.connect(this.assetOwner1).claimRewards(
         this.rewardPool.assetId + 101, // undeployed asset-reward pool
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
       const receipt_after = await tx_undeployed_pool.wait();
       const gasUsed_after = parseInt(receipt_after.gasUsed);
@@ -1166,7 +1190,7 @@ describe("PMC", () => {
     it('SUCCESS: it should skip the `if` block if the reward period for the pool has already finished', async () => {
       const tx_before = await privacyMining.connect(this.assetOwner1).claimRewards(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
       const receipt_before = await tx_before.wait();
       const gasUsed_before = parseInt(receipt_before.gasUsed);
@@ -1175,7 +1199,7 @@ describe("PMC", () => {
 
       const tx_after = await privacyMining.connect(this.assetOwner1).claimRewards(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
       const receipt_after = await tx_after.wait();
       const gasUsed_after = parseInt(receipt_after.gasUsed);
@@ -1197,8 +1221,7 @@ describe("PMC", () => {
       // CHECK: USER POOL REWARDS
       const userPoolState_before = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        VOUCHER_REWARD_TYPE
+        this.rewardPool.assetId
       );
 
       // ASSERT `userPoolRewards` FOR USER IS NOT ZERO BEFORE CLAIM
@@ -1211,14 +1234,13 @@ describe("PMC", () => {
       // USER: CLAIMS REWARDS
       await privacyMining.connect(this.assetOwner1).claimRewards(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
 
       // CHECK: USER POOL REWARDS
       const userPoolState_after = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.rewardPool.assetId,
-        VOUCHER_REWARD_TYPE
+        this.rewardPool.assetId
       );
 
       // ASSERT `userPoolRewards` FOR USER IS NOT ZERO BEFORE CLAIM
@@ -1236,10 +1258,10 @@ describe("PMC", () => {
       );
 
       // GET USER'S PENDING REWARDS: some timestamps before claiming
-      const pendingRewards = await privacyMining.rewardsPending(
+      const pendingRewards = await privacyMining.getPendingRewards(
         this.assetOwner1.address,
         this.rewardPool.assetId,
-        VOUCHER_REWARD_TYPE
+        1
       );
       const userPendingRewards = parseInt(
         fromUnit(pendingRewards.toString())
@@ -1247,7 +1269,7 @@ describe("PMC", () => {
 
       await privacyMining.connect(this.assetOwner1).claimRewards(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
 
       const userPoolVoucherBalance_after = await privacyMining.userPoolVoucherBalance(
@@ -1273,10 +1295,10 @@ describe("PMC", () => {
       );
 
       // GET USER'S PENDING REWARDS: some timestamps before claiming
-      const pendingRewards = await privacyMining.rewardsPending(
+      const pendingRewards = await privacyMining.getPendingRewards(
         this.assetOwner1.address,
         this.rewardPool.assetId,
-        VOUCHER_REWARD_TYPE
+        1
       );
       const userPendingRewards = parseInt(
         fromUnit(pendingRewards.toString())
@@ -1285,7 +1307,7 @@ describe("PMC", () => {
       // USER: CLAIMS REWARDS
       await privacyMining.connect(this.assetOwner1).claimRewards(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
 
       // CHECK AFTER: POOL's TOTALVOUCHERSCLAIMED 
@@ -1309,7 +1331,6 @@ describe("PMC", () => {
       await expect(
         privacyMining.connect(this.assetOwner1).claimRewards(
           this.rewardPool.assetId,
-          this.rewardPool.rewardType
         )
       ).to.emit(
         privacyMining, 
@@ -1317,7 +1338,6 @@ describe("PMC", () => {
       ).withArgs(
         this.assetOwner1.address,
         this.rewardPool.assetId,
-        this.rewardPool.rewardType,
         anyValue
       );
     });
@@ -1326,7 +1346,7 @@ describe("PMC", () => {
       // USER: CLAIMS REWARD FOR A REWARD POOL WHERE THEY HAVE ACCUMULATED ZERO REWARDS :: HERE, NO ASSETS DEPOSITED
       const tx = await privacyMining.connect(this.assetOwner2).claimRewards(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
       const receipt = await tx.wait();
       const gasUsed = parseInt(receipt.gasUsed);
@@ -1358,8 +1378,7 @@ describe("PMC", () => {
     it('SUCCESS: it should skip the `if` block if the reward pool hasn\'t been deployed', async () => {
       // USER: CLAIMS REWARDS IN A DEPLOYED POOL
       const tx_deployed_pool = await privacyMining.connect(this.assetOwner1).claimRewards(
-        this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId
       );
       const receipt_before = await tx_deployed_pool.wait();
       const gasUsed_before = parseInt(receipt_before.gasUsed);
@@ -1378,8 +1397,7 @@ describe("PMC", () => {
     
       // USER: CLAIMS REWARDS IN AN UNDEPLOYED POOL
       const tx_undeployed_pool = await privacyMining.connect(assetOwner1).claimRewards(
-        this.stakingRewardPool.assetId + 101,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId + 101
       );
       const receipt_after = await tx_undeployed_pool.wait();
       const gasUsed_after = parseInt(receipt_after.gasUsed);
@@ -1395,8 +1413,7 @@ describe("PMC", () => {
 
       // USER: CLAIMS REWARDS ONCE AFTER REWARD PERIOD FINISHES
       const tx_once = await privacyMining.connect(this.assetOwner1).claimRewards(
-        this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId
       );
       const receipt_before = await tx_once.wait();
       const gasUsed_before = parseInt(receipt_before.gasUsed);
@@ -1415,8 +1432,7 @@ describe("PMC", () => {
     
       // USER: CLAIMS REWARDS TWICE AFTER REWARD PERIOD FINISHES: No reward paid
       const tx_twice = await privacyMining.connect(assetOwner1).claimRewards(
-        this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId
       );
       const receipt_after = await tx_twice.wait();
       const gasUsed_after = parseInt(receipt_after.gasUsed);
@@ -1442,8 +1458,7 @@ describe("PMC", () => {
       // CHECK: USER POOL REWARDS
       const userPoolState_before = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId
       );
 
       // ASSERT `userPoolRewards` FOR USER IS NOT ZERO BEFORE CLAIM
@@ -1455,15 +1470,13 @@ describe("PMC", () => {
 
       // USER: CLAIMS REWARDS
       await privacyMining.connect(this.assetOwner1).claimRewards(
-        this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId
       );
 
       // CHECK: USER POOL REWARDS
       const userPoolState_after = await privacyMining.userPoolState(
         this.assetOwner1.address,
-        this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.assetId
       );
 
       // ASSERT `userPoolRewards` FOR USER IS NOT ZERO BEFORE CLAIM
@@ -1474,7 +1487,7 @@ describe("PMC", () => {
       );
     });
 
-    it('SUCCESS: STAKING_REWARD_TYPE: should emit the event `RewardPaid` with correct arguments', async () => {
+    it('SUCCESS: 2: should emit the event `RewardPaid` with correct arguments', async () => {
       // INCREASE THE TIME TO ACCUMULATE SOME REWARDS
       await time.increaseTo(this.phaseTwoPeriodFinish - 1000);
     
@@ -1482,7 +1495,6 @@ describe("PMC", () => {
       await expect(
         privacyMining.connect(this.assetOwner1).claimRewards(
           this.stakingRewardPool.assetId,
-          this.stakingRewardPool.rewardType
         )
       ).to.emit(
         privacyMining, 
@@ -1490,7 +1502,6 @@ describe("PMC", () => {
       .withArgs(
         this.assetOwner1.address,
         this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType,
         anyValue
       );
     });
@@ -1502,7 +1513,7 @@ describe("PMC", () => {
       // USER: CLAIMS REWARDS FOR AN UNPARTICIPATED REWARD POOL
       const tx = await privacyMining.connect(this.assetOwner2).claimRewards(
         this.stakingRewardPool.assetId,
-        this.stakingRewardPool.rewardType
+        this.stakingRewardPool.phase
       );
       const receipt = await tx.wait();
       const gasUsed = parseInt(receipt.gasUsed);
@@ -1537,7 +1548,7 @@ describe("PMC", () => {
 
       const _lastTimeRewardApplicable = await privacyMining.lastTimeRewardApplicable(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
 
       expect(_lastTimeRewardApplicable).to.eq(timestampBefore);
@@ -1549,7 +1560,7 @@ describe("PMC", () => {
 
       const _lastTimeRewardApplicable = await privacyMining.lastTimeRewardApplicable(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.phase
       );
 
       expect(_lastTimeRewardApplicable).to.eq(this.phaseOnePeriodFinish);
@@ -1560,7 +1571,7 @@ describe("PMC", () => {
   describe ('getDeployedPools()', () => {
     beforeEach(async () => {
       await doDeployDependentContracts();
-      await doDeployPMC(silentToken.address, smasp.address);
+      await doDeployPMC(silentToken.address, smasp.address, _rewardsDistributorAddress = smasp.address);
       await doSetPmcInSMASP();
     });
 
@@ -1568,7 +1579,7 @@ describe("PMC", () => {
       // DEPLOYER: CREATES REWARD POOL FOR ASSETID 1
       await privacyMining.createAssetRewardPool(
         1,
-        VOUCHER_REWARD_TYPE,
+        1,
         ONE_BILLION,
         ONE_MONTH
       );
@@ -1582,7 +1593,7 @@ describe("PMC", () => {
       // DEPLOYER: CREATES REWARD POOL FOR ASSETID 2
       await privacyMining.createAssetRewardPool(
         2,
-        VOUCHER_REWARD_TYPE,
+        1,
         ONE_BILLION,
         ONE_MONTH
       );
@@ -1596,7 +1607,7 @@ describe("PMC", () => {
       // DEPLOYER: CREATES REWARD POOL FOR ASSETID 3
       await privacyMining.createAssetRewardPool(
         3,
-        VOUCHER_REWARD_TYPE,
+        1,
         ONE_BILLION,
         ONE_MONTH
       );
@@ -1628,7 +1639,7 @@ describe("PMC", () => {
       const {rewardPool} = await createVoucherRewardPoolFixture();
       const rewardPerToken = await privacyMining.rewardPerToken(
         rewardPool.assetId,
-        rewardPool.rewardType
+        rewardPool.phase
       );
       await expect(rewardPerToken).to.eq(0);
     });
@@ -1637,7 +1648,7 @@ describe("PMC", () => {
       const {stakingRewardPool} = await createStakingRewardPoolFixture();
       const rewardPerToken = await privacyMining.rewardPerToken(
         stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.phase
       );
       await expect(rewardPerToken).to.eq(0);
     });
@@ -1655,8 +1666,7 @@ describe("PMC", () => {
       );
 
       const _rewardForPool = await privacyMining.rewardForPool(
-        rewardPool.assetId,
-        rewardPool.rewardType
+        rewardPool.assetId
       );
       
       // INCREASE THE TIME TO A DETERMINISTIC TIMESTAMP
@@ -1665,7 +1675,7 @@ describe("PMC", () => {
       // COMPUTE THE `rewardPerTokenStored` FROM THE PMC
       const _rewardPerToken_pmc =  await privacyMining.rewardPerToken(
         rewardPool.assetId,
-        rewardPool.rewardType
+        rewardPool.phase
       );
 
       // CALCULATE THE `rewardPerTokenStored` FOR THE SAME TIMESTAMP
@@ -1694,8 +1704,7 @@ describe("PMC", () => {
       );
 
       const _rewardForPool = await privacyMining.rewardForPool(
-        stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.assetId
       );
       
       // INCREASE THE TIME TO A DETERMINISTIC TIMESTAMP
@@ -1704,7 +1713,7 @@ describe("PMC", () => {
       // COMPUTE THE `rewardPerTokenStored` FROM THE PMC
       const _rewardPerToken_pmc =  await privacyMining.rewardPerToken(
         stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.phase
       );
 
       // CALCULATE THE `rewardPerTokenStored` FOR THE SAME TIMESTAMP
@@ -1731,7 +1740,7 @@ describe("PMC", () => {
   });
 
 
-  describe ('rewardsPending()', () => {
+  describe ('getPendingRewards()', () => {
     it('PHASE I: should compute the correct accumulated rewards of the user for a reward pool correctly', async () => {
       const {rewardPool, phaseOnePeriodFinish, assetOwner1} = await createVoucherRewardPoolFixture();
 
@@ -1747,8 +1756,7 @@ describe("PMC", () => {
       );
 
       const _rewardForPool = await privacyMining.rewardForPool(
-        rewardPool.assetId,
-        rewardPool.rewardType
+        rewardPool.assetId
       );
 
       const _userPoolVoucherBalance = await privacyMining.userPoolVoucherBalance(
@@ -1758,18 +1766,17 @@ describe("PMC", () => {
 
       const _userPoolState = await privacyMining.userPoolState(
         assetOwner1.address,
-        rewardPool.assetId,
-        rewardPool.rewardType
+        rewardPool.assetId
       );
       
       // INCREASE THE TIME TO A DETERMINISTIC TIMESTAMP
       await (time.increaseTo(phaseOnePeriodFinish - 1000));
 
       // GET THE PENDING REWARDS FOR THE USER FROM THE PMC
-      const _rewardsPending_pmc =  await privacyMining.rewardsPending(
+      const _rewardsPending_pmc =  await privacyMining.getPendingRewards(
         assetOwner1.address,
         rewardPool.assetId,
-        rewardPool.rewardType
+        rewardPool.phase
       );
 
       // CALCULATE THE `rewardPerTokenStored` FOR THE SAME TIMESTAMP
@@ -1812,8 +1819,7 @@ describe("PMC", () => {
       );
 
       const _rewardForPool = await privacyMining.rewardForPool(
-        stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.assetId
       );
 
       const _userPoolVoucherBalance = await privacyMining.userPoolVoucherBalance(
@@ -1823,18 +1829,17 @@ describe("PMC", () => {
 
       const _userPoolState = await privacyMining.userPoolState(
         assetOwner1.address,
-        stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.assetId
       );
       
       // INCREASE THE TIME TO A DETERMINISTIC TIMESTAMP
       await (time.increaseTo(phaseTwoPeriodFinish - 1000));
 
       // GET THE PENDING REWARDS FOR THE USER FROM THE PMC
-      const _rewardsPending_pmc =  await privacyMining.rewardsPending(
+      const _rewardsPending_pmc =  await privacyMining.getPendingRewards(
         assetOwner1.address,
         stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.phase
       );
 
       // CALCULATE THE `rewardPerTokenStored` FOR THE SAME TIMESTAMP
@@ -1890,7 +1895,7 @@ describe("PMC", () => {
       await expect(
         privacyMining.connect(this.assetOwner1).updateRewardRate(
           this.rewardPool.assetId,
-          this.rewardPool.rewardType,
+          this.rewardPool.phase,
           _newRewardRate
         )
       ).to.be.revertedWith(
@@ -1905,7 +1910,7 @@ describe("PMC", () => {
       await expect(
         privacyMining.connect(this.deployer).updateRewardRate(
           this.rewardPool.assetId,
-          this.rewardPool.rewardType,
+          this.rewardPool.phase,
           _newRewardRate
         )
       ).to.be.revertedWithCustomError(
@@ -1914,14 +1919,14 @@ describe("PMC", () => {
       );
     });
 
-    it('FAILURE: should revert if the rewardType isn\'t one of VOUCHER/STAKING', async() => {
+    it('FAILURE: should revert if the phase isn\'t one of VOUCHER/STAKING', async() => {
       await time.increaseTo(this.phaseOnePeriodFinish);
 
       const _newRewardRate = toUnit('100');
       await expect(
         privacyMining.connect(deployer).updateRewardRate(
           this.rewardPool.assetId,
-          this.rewardPool.rewardType,
+          this.rewardPool.phase,
           _newRewardRate
         )
       ).to.be.revertedWithCustomError(
@@ -1935,20 +1940,18 @@ describe("PMC", () => {
 
       // GET THE UPDATED REWARD POOL
       const _rewardForPool_before = await privacyMining.rewardForPool(
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
        
       await privacyMining.connect(this.deployer).updateRewardRate(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType,
+        this.rewardPool.phase,
         _newRewardRate
       );
 
       // GET THE UPDATED REWARD POOL
       const _rewardForPool_after = await privacyMining.rewardForPool(
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(_rewardForPool_after.rewardRate).to.not.eq(_rewardForPool_before.rewardRate);
@@ -1960,8 +1963,7 @@ describe("PMC", () => {
 
       // GET THE INITIAL REWARD POOL
       const _rewardForPool_before = await privacyMining.rewardForPool(
-        stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.assetId
       );
 
       // GET THE OLD SILENT BALANCE OF PMC
@@ -1984,14 +1986,13 @@ describe("PMC", () => {
       // DEPLOYER: UPDATES REWARD RATE
       await privacyMining.connect(deployer).updateRewardRate(
         stakingRewardPool.assetId,
-        stakingRewardPool.rewardType,
+        stakingRewardPool.phase,
         _newRewardRate
       );
 
       // GET THE UPDATED REWARD POOL
       const _rewardForPool_after = await privacyMining.rewardForPool(
-        stakingRewardPool.assetId,
-        stakingRewardPool.rewardType
+        stakingRewardPool.assetId
       );
 
       // GET THE NEW SILENT BALANCE OF PMC
@@ -2006,8 +2007,7 @@ describe("PMC", () => {
     it('SUCCESS: Updates the reward pool\'s `lastUpdateTime`', async() => {
       // GET THE UPDATED REWARD POOL
       const _rewardForPool_before = await privacyMining.rewardForPool(
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
        
       const _newRewardRate = toUnit('100');
@@ -2017,14 +2017,12 @@ describe("PMC", () => {
       // DEPLOYER: UPDATES REWARD RATE
       await privacyMining.connect(this.deployer).updateRewardRate(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType,
         _newRewardRate
       );
 
       // GET THE UPDATED REWARD POOL
       const _rewardForPool_after = await privacyMining.rewardForPool(
-        this.rewardPool.assetId,
-        this.rewardPool.rewardType
+        this.rewardPool.assetId
       );
 
       expect(_rewardForPool_before.lastUpdateTime).to.be.at.most(this.phaseOnePeriodFinish - 1000);
@@ -2038,7 +2036,7 @@ describe("PMC", () => {
       await expect(
         privacyMining.connect(this.deployer).updateRewardRate(
           this.rewardPool.assetId,
-          this.rewardPool.rewardType,
+          this.rewardPool.phase,
           _newRewardRate
         )
       ).to.emit(
@@ -2046,7 +2044,7 @@ describe("PMC", () => {
         'RewardRateUpdated'
       ).withArgs(
         this.rewardPool.assetId,
-        this.rewardPool.rewardType,
+        this.rewardPool.phase,
         _newRewardRate
       )
     });
