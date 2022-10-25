@@ -10,15 +10,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 interface IPrivacyMining {
     struct RewardPool {
         uint8 phase;
-        uint48 rewardsDuration;
-        uint48 periodFinish;
-        uint48 lastUpdateTime;
-        uint256 rewardRate;
-        uint256 rewardPerTokenStored;
-        uint256 globalPoolBalance; // non-compressible
+        uint64 lastRewardTime;
+        uint64 allocPoint;
+        uint256 accSilentPerShare;
+        uint256 globalPoolBalance;
     }
 
-    function getPoolStatus(uint256 assetId)
+    function getRewardPoolInfo(uint256 _assetId)
         external
         view
         returns (RewardPool memory);
@@ -30,9 +28,9 @@ interface IPrivacyMining {
     ) external;
 
     error InvalidPhase(
-        uint256 _assetId,
-        uint8 assumedPhase,
-        uint8 correctPhase
+        uint256 assetId,
+        uint256 assumedPhase,
+        uint256 correctPhase
     );
 }
 
@@ -71,10 +69,13 @@ contract SMASP is Pausable, Ownable {
             amount
         );
 
+        //  TODO: Conditional execution for the following function
+
         // Get the phase of the corresponding asset-reward pool in PMC
         IPrivacyMining.RewardPool memory _rewardPool = IPrivacyMining(
             privacyMiningContract
-        ).getPoolStatus(_assetId);
+        ).getRewardPoolInfo(_assetId);
+        // NOTE: Change this
         if (_rewardPool.phase != 1)
             revert IPrivacyMining.InvalidPhase(_assetId, 1, _rewardPool.phase);
 

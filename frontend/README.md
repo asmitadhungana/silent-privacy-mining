@@ -6,19 +6,20 @@ This is the frontend for privacy-mining-program
 
 ### Install the dependencies
 
-`npm install` or `yarn`
+`yarn install`
 
 ### Start a local hardhat node in an isolated terminal
 
-1. `npx hardhat node`
+1.1. `yarn hardhat node` // Runs a local node with hardhat-deploy
+1.2. `yarn hardhat node --no-deploy` // Runs a local node without hardhat-deploy
 
-### Deploy the contracts:
+### Deploy the contracts [Case: 1.2.]
 
-2. `npx hardhat run --network localhost scripts/1_deploy_contracts.js`
+2. `yarn hardhat run --network localhost scripts_alt/1_deploy_contracts.js`
 
-### Setup the necessary pre-conditions for pmc:
+### Setup the necessary pre-conditions for pmc [Case: 1.2.]
 
-3. `npx hardhat run --network localhost scripts/2_setup.js`
+3. `yarn hardhat run --network localhost scripts_alt/2_setup.js`
 
 ### Change the deployed contract addresses in /frontend/src/api/<contract.json>
 
@@ -26,7 +27,7 @@ This is the frontend for privacy-mining-program
 
 ### Start the UI
 
-5. `npm start`
+5. `yarn start`
 
 ### To use the admin panel in UI
 

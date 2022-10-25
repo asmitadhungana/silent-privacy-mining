@@ -1,13 +1,18 @@
-# Sample Hardhat Project
+# Silent Privacy Mining Program
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
+### Run the backend
 
 ```shell
-npx hardhat help
-npx hardhat test
-GAS_REPORT=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+yarn install
+yarn hardhat node
+yarn hardhat deploy
+yarn hardhat test
+yarn hardhat run scripts/<script_file.ts>
 ```
+
+### Run the frontend
+
+```shell
+cd /frontend
+```
+    Follow the instructions in /frontend/README.md
