@@ -4,8 +4,8 @@
 
 ```shell
 yarn install
-yarn hardhat node
-yarn hardhat deploy
+[If using the hardhat-deploy plugin]: yarn hardhat node
+[else]:  yarn hardhat node --no-deploy 
 yarn hardhat test
 yarn hardhat run scripts/<script_file.ts>
 ```

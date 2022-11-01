@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 /// @dev Interface of Silent Protocol's PrivacyMining contract
 interface IPrivacyMining {
     event LogUpdateRewardPool(uint256 assetId, uint256 allocPoint);
-    event LogUpdateSilentEmissionRate(uint256 silentPerSecond);
+    event LogUpdateRewardEmissionRate(uint256 phase, uint256 rewardPerSecond);
 
     event LogDepositToPool(address user, uint256 assetId, uint256 amount);
     event LogSilentStakedToPool(address user, uint256 assetId, uint256 amount);
@@ -13,7 +13,7 @@ interface IPrivacyMining {
         uint256 assetId,
         uint256 amount
     );
-    event LogRewardPaidByPool(uint256 assetId, address user, uint256 amount);
+    event LogRewardPaidByPool(uint256 assetId, address user, uint256 indexed amount);
     event LogRewardPoolAdded(
         uint256 assetId,
         uint256 phase,
@@ -24,7 +24,7 @@ interface IPrivacyMining {
         uint256 assetId,
         uint256 lastRewardTime,
         uint256 globalPoolBalance,
-        uint256 accSilentPerShare
+        uint256 accRewardPerShare
     );
 
     /// @dev Registers into PMC whenever a deposit of `amount` is made by `user`in SMASP to an asset pool

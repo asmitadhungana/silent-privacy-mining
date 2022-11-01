@@ -1,5 +1,5 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction } from 'hardhat-deploy/types';
 
 const deploySMASPContract: DeployFunction = async (
   hre: HardhatRuntimeEnvironment
@@ -8,8 +8,8 @@ const deploySMASPContract: DeployFunction = async (
   const { deploy, log, get } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  log("Deploying the SMASP contract...");
-  const smasp = await deploy("SMASP", {
+  log('Deploying the SMASP contract...');
+  const smasp = await deploy('SMASP', {
     from: deployer,
     args: [],
     log: true,
@@ -20,4 +20,4 @@ const deploySMASPContract: DeployFunction = async (
 };
 
 export default deploySMASPContract;
-deploySMASPContract.tags = ["all", "smasp"];
+deploySMASPContract.tags = ['all', 'smasp'];

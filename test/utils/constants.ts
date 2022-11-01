@@ -1,0 +1,3 @@
+export const ONE_MONTH: number = 30 * 24 * 60 * 60; // 2592000
+export const BASE_TEN = 10;
+export const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
