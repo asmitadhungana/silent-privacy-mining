@@ -9,3 +9,6 @@ typechain-types
 cache
 artifacts
 deployments
+
+#Local files
+.DS_Store

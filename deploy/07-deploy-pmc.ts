@@ -9,7 +9,7 @@ const deployPMC: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const silentToken = await get('SilentToken');
   const smasp = await get('SMASP');
 
-  log('Deploying the SMASP contract...');
+  log('Deploying the PrivacyMining contract...');
   const pmc = await deploy('PrivacyMining', {
     from: deployer,
     args: [silentToken.address, smasp.address],
@@ -21,5 +21,5 @@ const deployPMC: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default deployPMC;
-deployPMC.tags = ['all', ''];
+deployPMC.tags = ['all', 'privacyMining'];
 deployPMC.dependencies = ['silentToken', 'smasp'];

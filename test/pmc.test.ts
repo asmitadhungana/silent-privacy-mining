@@ -5,17 +5,16 @@ import { expect, assert } from './chai-setup';
 import { BigNumber, constants, utils } from 'ethers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import {
+  anyUint,
+  anyValue,
+} from '@nomicfoundation/hardhat-chai-matchers/withArgs';
+import {
   ethers,
   deployments,
   getUnnamedAccounts,
   getNamedAccounts,
 } from 'hardhat';
-import {
-  SMASP,
-  PrivacyMining,
-  SilentToken,
-  SilentToken__factory,
-} from '../typechain-types';
+import { SMASP, PrivacyMining, SilentToken } from '../typechain-types';
 import {
   advanceTime,
   setupUser,
@@ -25,6 +24,7 @@ import {
   advanceBlockTo,
   fromUnit,
 } from './utils';
+import snapshotGasCost from '@uniswap/snapshot-gas-cost';
 
 const setup = deployments.createFixture(async () => {
   await deployments.fixture('all');
@@ -33,6 +33,7 @@ const setup = deployments.createFixture(async () => {
     PrivacyMining: <PrivacyMining>await ethers.getContract('PrivacyMining'),
     SMASP: <SMASP>await ethers.getContract('SMASP'),
     WETH: <SilentToken>await ethers.getContract('WETH'),
+    DAI: <SilentToken>await ethers.getContract('DAI'),
     SilentToken: <SilentToken>await ethers.getContract('SilentToken'),
   };
   const users = await setupUsers(await getUnnamedAccounts(), contracts);
@@ -89,14 +90,14 @@ describe('PrivacyMining', () => {
       );
       await addRewardPool_tx.wait(1);
 
-      const timestamp = (
+      const timestamp1 = (
         await ethers.provider.getBlock(addRewardPool_tx.blockNumber)
       ).timestamp;
 
       const wethRewardPool = await PrivacyMining.rewardPoolInfo(WETH.address);
 
       expect(wethRewardPool.phase).to.eq(1);
-      expect(wethRewardPool.lastRewardTime).to.eq(timestamp);
+      expect(wethRewardPool.lastRewardTime).to.eq(timestamp1);
       expect(wethRewardPool.allocPoint).to.eq(100);
       expect(wethRewardPool.accRewardPerShare).to.eq(0);
       expect(wethRewardPool.globalPoolBalance).to.eq(0);
@@ -112,6 +113,13 @@ describe('PrivacyMining', () => {
       await addRewardPool_tx.wait(1);
 
       expect(await PrivacyMining.phaseToTotalAllocPoint(1)).to.eq(100);
+    });
+
+    it('Gas snapshot for `addRewardPool` function', async () => {
+      const { multisig, PrivacyMining, WETH } = await setup();
+      await snapshotGasCost(
+        multisig.PrivacyMining.estimateGas.addRewardPool(WETH.address, 1, 100)
+      );
     });
   });
 
@@ -136,6 +144,7 @@ describe('PrivacyMining', () => {
         WETH,
         PrivacyMining,
         depositAmount,
+        multisig,
       };
     });
 
@@ -158,6 +167,12 @@ describe('PrivacyMining', () => {
       expect(userPoolInfo.userPoolBalance).to.eq(_.depositAmount);
       expect(userPoolInfo.phase).to.eq(1);
       expect(userPoolInfo.userVoucherBalance).to.eq(0);
+    });
+
+    it('Gas snapshot for `depositAssetToPool` function', async () => {
+      await snapshotGasCost(
+        _.users[0].SMASP.depositAsset(_.WETH.address, _.depositAmount)
+      );
     });
   });
 
@@ -186,33 +201,33 @@ describe('PrivacyMining', () => {
     it('PendingReward should equal ExpectedReward', async () => {
       await _.users[0].WETH.approve(_.SMASP.address, _.depositAmount);
 
-      let log_1 = await _.users[0].SMASP.depositAsset(
+      const log1 = await _.users[0].SMASP.depositAsset(
         _.WETH.address,
         _.depositAmount
       );
-      await log_1.wait();
+      await log1.wait();
 
       await advanceTime(86400);
 
-      let log_2 = await _.PrivacyMining.updateRewardPoolVariables(
+      const log2 = await _.PrivacyMining.updatePoolRewardVariables(
         _.WETH.address
       );
 
-      let timestamp2 = (await ethers.provider.getBlock(log_2.blockNumber))
+      const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber))
         .timestamp;
-      let timestamp = (await ethers.provider.getBlock(log_1.blockNumber))
+      const timestamp1 = (await ethers.provider.getBlock(log1.blockNumber))
         .timestamp;
 
-      let expectedRewards = BigNumber.from(toUnit(1).toString()).mul(
-        timestamp2 - timestamp
+      const expectedRewards = BigNumber.from(toUnit(1).toString()).mul(
+        timestamp2 - timestamp1
       );
 
-      let pendingRewards = await _.PrivacyMining.getPendingRewards(
+      const pendingRewards = await _.PrivacyMining.getPendingRewards(
         _.WETH.address,
         _.users[0].address
       );
 
-      // console.log('timestamp2', timestamp2, 'timestamp', timestamp);
+      // console.log('timestamp2', timestamp2, 'timestamp', timestamp1);
       // console.log('expectedRewards: ', parseInt(expectedRewards.toString()));
       // console.log('pendingRewards: ', parseInt(pendingRewards.toString()));
 
@@ -222,36 +237,52 @@ describe('PrivacyMining', () => {
     it('When time is lastRewardTime', async function () {
       await _.users[0].WETH.approve(_.SMASP.address, _.depositAmount);
 
-      let log_1 = await _.users[0].SMASP.depositAsset(
+      const log1 = await _.users[0].SMASP.depositAsset(
         _.WETH.address,
         _.depositAmount
       );
 
       await advanceBlockTo(3);
 
-      let log_2 = await _.PrivacyMining.updateRewardPoolVariables(
+      const log2 = await _.PrivacyMining.updatePoolRewardVariables(
         _.WETH.address
       );
 
-      let timestamp2 = (await ethers.provider.getBlock(log_2.blockNumber))
+      const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber))
         .timestamp;
-      let timestamp = (await ethers.provider.getBlock(log_1.blockNumber))
+      const timestamp1 = (await ethers.provider.getBlock(log1.blockNumber))
         .timestamp;
 
-      let expectedRewards = BigNumber.from(toUnit(1).toString()).mul(
-        timestamp2 - timestamp
+      const expectedRewards = BigNumber.from(toUnit(1).toString()).mul(
+        timestamp2 - timestamp1
       );
 
-      let pendingRewards = await _.PrivacyMining.getPendingRewards(
+      const pendingRewards = await _.PrivacyMining.getPendingRewards(
         _.WETH.address,
         _.users[0].address
       );
 
       expect(pendingRewards).to.be.equal(expectedRewards);
     });
+
+    it('Gas snapshot for `getPendingRewards` function', async () => {
+      await _.users[0].WETH.approve(_.SMASP.address, _.depositAmount);
+
+      const log1 = await _.users[0].SMASP.depositAsset(
+        _.WETH.address,
+        _.depositAmount
+      );
+      await log1.wait();
+
+      await advanceTime(86400);
+
+      await snapshotGasCost(
+        _.PrivacyMining.getPendingRewards(_.WETH.address, _.users[0].address)
+      );
+    });
   });
 
-  describe('updateRewardPoolVariables', () => {
+  describe('updatePoolRewardVariables', () => {
     let _: SetupVars;
 
     beforeEach(async () => {
@@ -277,7 +308,7 @@ describe('PrivacyMining', () => {
 
     it('Should emit event `LogUpdatePoolRewards`', async function () {
       await advanceBlockTo(1);
-      await expect(_.PrivacyMining.updateRewardPoolVariables(_.WETH.address))
+      await expect(_.PrivacyMining.updatePoolRewardVariables(_.WETH.address))
         .to.emit(_.PrivacyMining, 'LogUpdatePoolRewards')
         .withArgs(
           _.WETH.address,
@@ -295,6 +326,14 @@ describe('PrivacyMining', () => {
 
     it('Should take else path', async function () {
       // Use Multicall here
+    });
+
+    it('Gas snapshot for `updatePoolRewardVariables` function', async () => {
+      await advanceBlockTo(1);
+
+      await snapshotGasCost(
+        _.PrivacyMining.updatePoolRewardVariables(_.WETH.address)
+      );
     });
   });
 
@@ -323,48 +362,36 @@ describe('PrivacyMining', () => {
     });
 
     it(`should reward users with correct amount of vouchers`, async () => {
-      const log_1 = await _.users[0].SMASP.depositAsset(
+      const log1 = await _.users[0].SMASP.depositAsset(
         _.WETH.address,
         _.depositAmount
       );
       await advanceTime(86400);
 
-      const log_2 = await _.users[0].SMASP.depositAsset(
-        _.WETH.address,
-        _.depositAmount
+      const log2 = await _.users[0].PrivacyMining.claimRewardsFromPool(
+        _.WETH.address
       );
 
-      await advanceBlockTo(3);
-
-      await time.increase(86400);
-
-      // const log_2 = await _.PrivacyMining.getPendingRewards(
-      //   _.WETH.address,
-      //   _.users[0].address
-      // );
-
-      const timestamp2 = (await ethers.provider.getBlock(log_2.blockNumber))
+      const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber))
         .timestamp;
-      const timestamp = (await ethers.provider.getBlock(log_1.blockNumber))
+      const timestamp1 = (await ethers.provider.getBlock(log1.blockNumber))
         .timestamp;
 
-      console.log(timestamp2, timestamp);
-
-      const expectedRewards = BigNumber.from(toUnit(1).toString()).mul(
-        timestamp2 - timestamp
-      );
+      const expectedRewards = toUnit(1).mul(timestamp2 - timestamp1);
 
       expect(
         (await _.PrivacyMining.userPoolInfo(_.users[0].address, _.WETH.address))
           .rewardDebt
       ).to.eq(expectedRewards);
+    });
 
-      await _.users[0].PrivacyMining.claimRewardsFromPool(_.WETH.address);
+    it('Gas snapshot for `claimRewards` function [phase=1]', async () => {
+      await _.users[0].SMASP.depositAsset(_.WETH.address, _.depositAmount);
 
-      expect(
-        (await _.PrivacyMining.userPoolInfo(_.users[0].address, _.WETH.address))
-          .userVoucherBalance
-      ).to.eq(expectedRewards);
+      await time.increase(86400);
+      await snapshotGasCost(
+        _.users[0].PrivacyMining.claimRewardsFromPool(_.WETH.address)
+      );
     });
   });
 
@@ -396,12 +423,13 @@ describe('PrivacyMining', () => {
 
       await users[0].PrivacyMining.claimRewardsFromPool(WETH.address);
 
-      console.log(
-        'userVoucherBalance :' +
-          (await PrivacyMining.userPoolInfo(users[0].address, WETH.address))
-            .userVoucherBalance
-      );
+      // console.log(
+      //   'userVoucherBalance :' +
+      //     (await PrivacyMining.userPoolInfo(users[0].address, WETH.address))
+      //       .userVoucherBalance
+      // );
 
+      await multisig.PrivacyMining.setRewardEmissionRate(2, toUnit(1));
       await multisig.PrivacyMining.addRewardPool(WETH.address, 2, 10);
 
       await multisig.SilentToken.transfer(users[0].address, depositAmount);
@@ -505,6 +533,15 @@ describe('PrivacyMining', () => {
       );
       expect(userPoolInfo.phase).to.eq(2);
     });
+
+    it('Gas snapshot for `stakeSilentToPool` function', async () => {
+      await snapshotGasCost(
+        _.users[0].PrivacyMining.stakeSilentToPool(
+          _.WETH.address,
+          _.depositAmount
+        )
+      );
+    });
   });
 
   describe('unstakeSilentFromPool', () => {
@@ -535,11 +572,11 @@ describe('PrivacyMining', () => {
 
       await users[0].PrivacyMining.claimRewardsFromPool(WETH.address);
 
-      console.log(
-        'userVoucherBalance :' +
-          (await PrivacyMining.userPoolInfo(users[0].address, WETH.address))
-            .userVoucherBalance
-      );
+      // console.log(
+      //   'userVoucherBalance :' +
+      //     (await PrivacyMining.userPoolInfo(users[0].address, WETH.address))
+      //       .userVoucherBalance
+      // );
 
       await multisig.PrivacyMining.setRewardEmissionRate(2, toUnit(1));
       await multisig.PrivacyMining.addRewardPool(WETH.address, 2, 10);
@@ -668,6 +705,15 @@ describe('PrivacyMining', () => {
         )
       );
     });
+
+    it('Gas snapshot for `unstakeSilentFromPool` function', async () => {
+      await snapshotGasCost(
+        _.users[0].PrivacyMining.unstakeSilentFromPool(
+          _.WETH.address,
+          _.depositAmount
+        )
+      );
+    });
   });
 
   describe('claimRewards: [Phase II]', () => {
@@ -707,6 +753,12 @@ describe('PrivacyMining', () => {
       await multisig.PrivacyMining.setRewardEmissionRate(2, toUnit(1));
       await multisig.PrivacyMining.addRewardPool(WETH.address, 2, 10);
 
+      // Owner: Transfers Silent Tokens to PMC for rewards distribution for 5 days
+      await multisig.SilentToken.transfer(
+        PrivacyMining.address,
+        toUnit(1).mul(86400).mul(5)
+      );
+
       // USER: Stakes SILENT in WETH reward pool in phase 2
 
       await multisig.SilentToken.transfer(users[0].address, depositAmount);
@@ -729,11 +781,18 @@ describe('PrivacyMining', () => {
         _.depositAmount
       );
 
+      const userSilentBalance_before = await _.users[0].SilentToken.balanceOf(
+        _.users[0].address
+      );
+
       await advanceTime(86400);
 
-      const log2 = await _.users[0].PrivacyMining.unstakeSilentFromPool(
-        _.WETH.address,
-        _.depositAmount
+      const log2 = await _.users[0].PrivacyMining.claimRewardsFromPool(
+        _.WETH.address
+      );
+
+      const userSilentBalance_after = await _.users[0].SilentToken.balanceOf(
+        _.users[0].address
       );
 
       const timestamp1 = (await ethers.provider.getBlock(log1.blockNumber))
@@ -741,22 +800,126 @@ describe('PrivacyMining', () => {
       const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber))
         .timestamp;
 
-      const expectedRewards = BigNumber.from(toUnit(1).toString()).mul(
-        timestamp2 - timestamp1
+      const expectedRewards = toUnit(1).mul(timestamp2 - timestamp1);
+
+      const claimedRewards = userSilentBalance_after.sub(
+        userSilentBalance_before
       );
 
-      const claimRewards_tx =
-        await _.users[0].PrivacyMining.claimRewardsFromPool(_.WETH.address);
-
-      await claimRewards_tx.wait(1);
-      console.log('timestamp2', timestamp2, 'timestamp', timestamp1);
-      console.log('expectedRewards: ', fromUnit(expectedRewards.toString()));
-      console.log('claimRewards: ', claimRewards_tx);
-
-      console.log(await _.PrivacyMining.phaseToRewardEmissionRate(2));
-      console.log(await _.PrivacyMining.rewardPoolInfo(_.WETH.address));
-
       expect(claimedRewards).to.be.equal(expectedRewards);
+    });
+
+    it('Gas snapshot for `claimRewardsForPool` function [Phase II]', async () => {
+      const log1 = await _.users[0].PrivacyMining.stakeSilentToPool(
+        _.WETH.address,
+        _.depositAmount
+      );
+      await advanceTime(86400);
+
+      await snapshotGasCost(
+        _.users[0].PrivacyMining.claimRewardsFromPool(_.WETH.address)
+      );
+    });
+  });
+
+  describe('massUpdatePoolRewardVariables', function () {
+    it('Should call updatePoolRewardVariables', async function () {
+      const { multisig, PrivacyMining, WETH } = await setup();
+
+      await multisig.PrivacyMining.addRewardPool(WETH.address, 1, 10);
+      await advanceBlockTo(1);
+      await expect(
+        multisig.PrivacyMining.massUpdatePoolRewardVariables([WETH.address], 1)
+      )
+        .to.emit(PrivacyMining, 'LogUpdatePoolRewards')
+        .withArgs(WETH.address, anyUint, anyUint, anyUint);
+    });
+
+    it('Updating invalid pools should fail', async function () {
+      const { multisig, PrivacyMining, WETH } = await setup();
+      await expect(
+        multisig.PrivacyMining.massUpdatePoolRewardVariables([WETH.address], 1)
+      ).to.be.revertedWithCustomError(PrivacyMining, 'InvalidPhase');
+    });
+  });
+
+  describe('updateRewardPoolAllocations', () => {
+    it('should update the pool allocations of the target pool', async () => {
+      const { multisig, PrivacyMining, WETH } = await setup();
+
+      const old_allocPoint = 10;
+      await multisig.PrivacyMining.addRewardPool(
+        WETH.address,
+        1,
+        old_allocPoint
+      );
+      await advanceBlockTo(1);
+
+      expect(
+        (await PrivacyMining.rewardPoolInfo(WETH.address)).allocPoint
+      ).to.equal(old_allocPoint);
+
+      const new_allocPoint = 100;
+      await multisig.PrivacyMining.updateRewardPoolAllocations(
+        WETH.address,
+        1,
+        new_allocPoint
+      );
+
+      expect(
+        (await PrivacyMining.rewardPoolInfo(WETH.address)).allocPoint
+      ).to.equal(new_allocPoint);
+    });
+
+    it('should update the reward shares of all other reward pools in the same phase', async () => {
+      const { multisig, PrivacyMining, WETH, DAI } = await setup();
+
+      // Add WETH Reward Pool to PMC
+      await multisig.PrivacyMining.addRewardPool(WETH.address, 1, 60);
+
+      // Add DAI Reward Pool to PMC
+      await multisig.PrivacyMining.addRewardPool(DAI.address, 1, 40);
+
+      // Expect rewardShare of WETH pool to be 60% and DAI to be 40% of total share for the phase
+
+      const phaseOne_oldTotalAllocPoint = parseInt(
+        await PrivacyMining.phaseToTotalAllocPoint(1)
+      );
+      const weth_oldPoolInfo = await PrivacyMining.rewardPoolInfo(WETH.address);
+      const weth_oldRewardShare =
+        parseInt(weth_oldPoolInfo.allocPoint) / phaseOne_oldTotalAllocPoint;
+
+      const dai_oldPoolInfo = await PrivacyMining.rewardPoolInfo(DAI.address);
+      const dai_oldRewardShare =
+        parseInt(dai_oldPoolInfo.allocPoint) / phaseOne_oldTotalAllocPoint;
+
+      expect(weth_oldRewardShare).to.equal(0.6);
+      expect(dai_oldRewardShare).to.equal(0.4);
+
+      await advanceBlockTo(1);
+
+      // UPDATE WETH ALLOCPOINT TO BE SAME AS DAI POOL'S ALLOCPOINT
+
+      await multisig.PrivacyMining.updateRewardPoolAllocations(
+        WETH.address,
+        1,
+        40
+      );
+
+      const phaseOne_newTotalAllocPoint = parseInt(
+        await PrivacyMining.phaseToTotalAllocPoint(1)
+      );
+      const weth_newPoolInfo = await PrivacyMining.rewardPoolInfo(WETH.address);
+      const weth_newRewardShare =
+        parseInt(weth_newPoolInfo.allocPoint) / phaseOne_newTotalAllocPoint;
+
+      const dai_newPoolInfo = await PrivacyMining.rewardPoolInfo(DAI.address);
+      const dai_newRewardShare =
+        parseInt(dai_newPoolInfo.allocPoint) / phaseOne_newTotalAllocPoint;
+
+      // Expect rewardShare of WETH pool and DAI pool both to be 50% of total share for the phase
+      expect(weth_newRewardShare).to.equal(0.5);
+      expect(dai_newRewardShare).to.equal(0.5);
     });
   });
 

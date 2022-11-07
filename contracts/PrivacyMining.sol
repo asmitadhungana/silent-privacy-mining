@@ -75,7 +75,9 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     /// Construct an additional struct for phase [?]
 
     /**
-     * @dev Silent token contract Instance
+     * @dev Silent token contract Instance expect(
+        (await PrivacyMining.rewardPooInfo(WETH.address)).allocPoint
+      ).to.equal(old_allocPoint);
      */
     IERC20 public immutable SILENT;
 
@@ -113,11 +115,6 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
      * @dev Stores the precision for both reward tokens
      */
     uint256 private constant ACC_REWARD_PRECISION = 1e18;
-
-    /**
-     * @dev Stores the reward period for PMC
-     */
-    uint256 public constant REWARD_PERIOD = 7 days;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -188,27 +185,29 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
             "User pool phase mismatch"
         );
 
-        uint256 accRewardPerShare = rewardPool_memory.accRewardPerShare; // rewardPerToken
-        uint256 globalPoolBalance = rewardPool_memory.globalPoolBalance; // globalPoolBalance
+        uint256 accRewardPerShare = rewardPool_memory.accRewardPerShare;
+        uint256 globalPoolBalance = rewardPool_memory.globalPoolBalance;
 
-        // Compute the accRewardPerShare [ rewardPerTokenStored ]
+        // Compute the accRewardPerShare for the pool
         if (
             block.timestamp > rewardPool_memory.lastRewardTime &&
             globalPoolBalance != 0
         ) {
-            uint256 duration = block.timestamp -
+            uint256 blocksSinceLastReward = block.timestamp -
                 rewardPool_memory.lastRewardTime;
 
-            uint256 rewardAmount = (duration *
+            uint256 totalRewardsAccruedInPool = (blocksSinceLastReward *
                 phaseToRewardEmissionRate[rewardPool_memory.phase] *
                 rewardPool_memory.allocPoint) /
                 phaseToTotalAllocPoint[rewardPool_memory.phase];
 
+            // Rewards accrued per token in the pool
             accRewardPerShare +=
-                (rewardAmount * ACC_REWARD_PRECISION) /
+                (totalRewardsAccruedInPool * ACC_REWARD_PRECISION) /
                 globalPoolBalance;
         }
 
+        // Compute and return the user's pending reward
         pending = uint256(
             int256(
                 (userPoolInfo_storage.userPoolBalance * accRewardPerShare) /
@@ -238,9 +237,10 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
         // userVoucherBalance remains unchanged, all others change
         userPoolInfo_storage.phase = 2;
         userPoolInfo_storage.userPoolBalance = 0;
+        userPoolInfo_storage.rewardDebt = 0;
         userPoolInfo_storage.userVoucherBalance =
-            userPoolInfo_storage.userVoucherBalance /
-            1e18; // [ Patch: Round off for now]
+            uint248(userPoolInfo_storage.userVoucherBalance /
+            ACC_REWARD_PRECISION); // [ Patch: Round off for now]
     }
 
     /**
@@ -251,7 +251,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
      * @param _assetId: assetId of the reward pool being updated
      * @return rewardPool_memory the updated instance of RewardPool for the _assetId in memory
      */
-    function updateRewardPoolVariables(uint256 _assetId)
+    function updatePoolRewardVariables(uint256 _assetId)
         public
         returns (RewardPool memory rewardPool_memory)
     {
@@ -285,9 +285,6 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
                 currentBlockTimeStamp
             );
 
-            console.log("updateRewardPoolVariables: Pool's accRewardPerShare...");
-            console.logUint(rewardPool_memory.accRewardPerShare);
-
             // Emit an event
             emit LogUpdatePoolRewards({
                 assetId: _assetId,
@@ -295,6 +292,28 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
                 globalPoolBalance: globalPoolBalance,
                 accRewardPerShare: rewardPool_memory.accRewardPerShare
             });
+        }
+    }
+
+    /** @dev Updates all the reward variables of reward pools in a given phase
+    * @param _assetIds: Array of assetId of all reward pools currently in `_phase`
+    * @param _phase: phase for which all reward pools are getting mass-updated
+    *
+    * Called whenever a new reward pool is added to the PMC {Func: addRewardPool}
+    * OR 
+    * the allocPoint for an existing reward pool is updated {Func: updateRewardPoolAllocations}
+    * This is because the rewards for all pools is affected by the above two actions
+    */
+    function massUpdatePoolRewardVariables(uint256[] calldata _assetIds, uint256 _phase) public {
+        uint256 len  = _assetIds.length;
+        for (uint256 i = 0; i < len; ++i) {
+            uint256 poolPhase = rewardPoolInfo[_assetIds[i]].phase;
+            if(poolPhase != _phase) revert InvalidPhase({
+                assetId: _assetIds[i],
+                assumedPhase: _phase,
+                correctPhase: poolPhase
+            });
+            updatePoolRewardVariables(_assetIds[i]);
         }
     }
 
@@ -324,21 +343,20 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
         UserPoolInfo storage userPoolInfo_storage = userPoolInfo[_user][
             _assetId
         ];
-        // Not required to check if user's pool phase >= 1 since it can't be when pool's in phase 1
 
-        // In first ever deposit: change user's pool phase to 1
+        // In first ever deposit: Update user's pool phase to 1
         if (userPoolInfo_storage.phase == 0) {
             userPoolInfo_storage.phase = 1;
         }
 
-        RewardPool memory rewardPool_memory = updateRewardPoolVariables(
+        RewardPool memory rewardPool_memory = updatePoolRewardVariables(
             _assetId
         );
 
-        // Change userPoolBalance
+        // Update userPoolBalance
         userPoolInfo_storage.userPoolBalance += _amount;
 
-        // Change user's pool rewardDebt
+        // Update user's pool rewardDebt
         userPoolInfo_storage.rewardDebt += int256(
             (_amount * rewardPool_memory.accRewardPerShare) /
                 ACC_REWARD_PRECISION
@@ -351,9 +369,6 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
             assetId: _assetId, 
             amount: _amount
         });
-
-        console.log("depositAssetToPool: User's rewardDebt...");
-        console.logInt(userPoolInfo_storage.rewardDebt);
     }
 
     /**
@@ -380,7 +395,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
         override
         onlyValidPhase(_assetId, 2)
     {
-        RewardPool memory rewardPool_memory = updateRewardPoolVariables(
+        RewardPool memory rewardPool_memory = updatePoolRewardVariables(
             _assetId
         );
         UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][
@@ -406,6 +421,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
             (userEffectiveStakeAmount * rewardPool_memory.accRewardPerShare) /
                 ACC_REWARD_PRECISION
         );
+
         // Add the effective stake amount to the rewardPool's globalPoolBalance
         rewardPoolInfo[_assetId].globalPoolBalance += userEffectiveStakeAmount;
 
@@ -417,9 +433,6 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
             assetId: _assetId,
             amount: _amount
         });
-
-        console.log("stakeSilentToPool: User's rewardDebt...");
-        console.logInt(userPoolInfo_storage.rewardDebt);
     }
 
     /**
@@ -446,7 +459,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
         nonReentrant
         onlyValidPhase(_assetId, 2)
     {
-        RewardPool memory rewardPool_memory = updateRewardPoolVariables(
+        RewardPool memory rewardPool_memory = updatePoolRewardVariables(
             _assetId
         );
         UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][
@@ -473,12 +486,12 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
 
         // Deduce effective unstake amount from userPoolBalance
         userPoolInfo_storage.userPoolBalance -= userEffectiveUnstakeAmount;
-        // Change user's reward debt in the pool
+        // Update user's reward debt in the pool
         userPoolInfo_storage.rewardDebt -= int256(
             (userEffectiveUnstakeAmount * rewardPool_memory.accRewardPerShare) /
                 ACC_REWARD_PRECISION
         );
-        // Change the rewardPool's globalPoolBalance
+        // Update the rewardPool's globalPoolBalance
         rewardPoolInfo[_assetId]
             .globalPoolBalance -= userEffectiveUnstakeAmount;
 
@@ -489,9 +502,6 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
             assetId: _assetId,
             amount: _amount
         });
-
-        console.log("unstakeSilentFromPool: User's rewardDebt...");
-        console.logInt(userPoolInfo_storage.rewardDebt);
     }
 
     /**
@@ -507,7 +517,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
      * - user's phase in the reward pool should match reward pool's current phase
      */
     function claimRewardsFromPool(uint256 _assetId) external override nonReentrant {
-        RewardPool memory rewardPool_memory = updateRewardPoolVariables(
+        RewardPool memory rewardPool_memory = updatePoolRewardVariables(
             _assetId
         );
         UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][
@@ -522,36 +532,32 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
                 correctPhase: rewardPool_memory.phase
             });
 
-        // Calculate the user's pending reward till the latest block
-        int256 accumulatedReward = int256(
+        // Compute the user's accumulated reward since genesis
+        int256 accumulatedRewardSinceGenesis = int256(
             userPoolInfo_storage.userPoolBalance *
                 rewardPool_memory.accRewardPerShare
          / ACC_REWARD_PRECISION);
-        uint256 userPendingReward = uint256(
-            accumulatedReward - userPoolInfo_storage.rewardDebt
+         
+        // Compute the user's accumulated reward since user's last claimed block
+        uint256 userPendingRewardSinceLastClaimedBlock = uint256(
+            accumulatedRewardSinceGenesis - userPoolInfo_storage.rewardDebt
         );
 
-        userPoolInfo_storage.rewardDebt = accumulatedReward;
-        console.log("claimRewardsFromPool: User's accumulatedReward...");
-        console.logInt(accumulatedReward);
-        console.log("claimRewardsFromPool: User's userPendingReward...");
-        console.logUint(userPendingReward);
-        console.log("claimRewardsFromPool: unstakeSilentFromPool: User's rewardDebt...");
-        console.logInt(userPoolInfo_storage.rewardDebt);
+        userPoolInfo_storage.rewardDebt = accumulatedRewardSinceGenesis;
 
         // If the pending reward is > 0, transfer it to the user
-        if (userPendingReward != 0) {
+        if (userPendingRewardSinceLastClaimedBlock != 0) {
             if (rewardPool_memory.phase == 2) {
-                SILENT.safeTransfer(msg.sender, userPendingReward);
+                SILENT.safeTransfer(msg.sender, userPendingRewardSinceLastClaimedBlock);
             } else if (rewardPool_memory.phase == 1) {
                 userPoolInfo_storage.userVoucherBalance += uint248(
-                    userPendingReward
+                    userPendingRewardSinceLastClaimedBlock
                 );
             }
             emit LogRewardPaidByPool({
                 assetId: _assetId, 
                 user: msg.sender, 
-                amount: userPendingReward
+                amount: userPendingRewardSinceLastClaimedBlock
             });
         }
     }
@@ -636,6 +642,10 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
      *
      * Requirements:
      * - reward pool's phase must match provided `_phase`
+     *
+     * NOTE: Owner should batch the function {massupdatePoolRewardVariables} for the same _phase
+     * whenever this function is called
+     * Maybe a pre-requisite should be that the 
      */
     function updateRewardPoolAllocations(
         uint256 _assetId,
@@ -643,9 +653,6 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
         uint256 _newAllocPoint
     ) external onlyOwner onlyValidPhase(_assetId, _phase) {
         uint256 poolPhase = rewardPoolInfo[_assetId].phase;
-
-        // Update reward pool variables
-        updateRewardPoolVariables(_assetId);
 
         // Update the total allocations for the phase
         phaseToTotalAllocPoint[poolPhase] =
@@ -672,20 +679,18 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
      * Emits the event {LogUpdateRewardEmissionRate} denoting the newly updated
      * reward emission rate for the `_phase`
      *
+     * Requirement: Owner will need to update all the reward pools with the 
+     * function: {massupdatePoolRewardVariables} beforehand
      */
     function setRewardEmissionRate(uint256 _phase, uint256 _rewardEmissionRate)
         external
         onlyOwner
     {
         require(_phase == 1 || _phase == 2, "Invalid Phase");
-        // Might need to update all the reward pools beforehand
         phaseToRewardEmissionRate[_phase] = _rewardEmissionRate;
         emit LogUpdateRewardEmissionRate({
             phase: _phase, 
             rewardPerSecond: _rewardEmissionRate
         });
     }
-
-    // TIMELOCK
-    function withdrawExcessPoolRewards() external onlyOwner {}
 }

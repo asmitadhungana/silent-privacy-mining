@@ -25,10 +25,10 @@ const setupPmc: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   log(`09.1 - PMC setup successful: Mutisig ${multisig} set as PMC owner`);
 
   log(
-    'Transferring all Silent tokens from the initial deployer to multisig...'
+    'Transferring half of Silent tokens from the initial deployer to multisig...'
   );
   const silentTotalSupply = await silentToken.totalSupply();
-  await silentToken.transfer(multisig, silentTotalSupply);
+  await silentToken.transfer(multisig, silentTotalSupply.div(2));
   log(`09.2 - PMC setup successful: Mutisig ${multisig} set as PMC owner`);
 };
 

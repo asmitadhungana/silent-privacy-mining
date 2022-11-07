@@ -50,6 +50,8 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "dotenv": "^16.0.3"
+    "@uniswap/snapshot-gas-cost": "^1.0.0",
+    "dotenv": "^16.0.3",
+    "mocha-chai-jest-snapshot": "^1.1.4"
   }
 }
