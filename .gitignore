@@ -12,3 +12,6 @@ deployments
 
 #Local files
 .DS_Store
+
+__snapshots__
+yarn-error.log
