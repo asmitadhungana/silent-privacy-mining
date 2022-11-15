@@ -6,11 +6,7 @@ import { SilentToken, SMASP } from '../typechain-types';
 const toBN = (v) => ethers.BigNumber.from(v.toString());
 const toUnit = (amount) => toBN(toWei(amount.toString(), 'ether'));
 
-const token_approve_transfer = async (
-  _token: SilentToken,
-  _to,
-  _allowance: BigNumber
-) => {
+const token_approve_transfer = async (_token: SilentToken, _to, _allowance: BigNumber) => {
   const tokenApproveTx = await _token.approve(_to, _allowance);
   tokenApproveTx.wait(1);
 };
@@ -35,10 +31,7 @@ export async function smasp_depositAssetToPool() {
   console.log('Token approval success');
 
   // Deposit the token/asset
-  const depositAssetTx = await smasp.depositAsset(
-    wethAssetId.address,
-    depositAmount
-  );
+  const depositAssetTx = await smasp.depositAsset(wethAssetId.address, depositAmount);
   depositAssetTx.wait(1);
 
   console.log(`Deposited 100 ${await wethAssetId.name()} tokens to SMASP`);

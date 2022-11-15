@@ -3,17 +3,12 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { ethers } from 'hardhat';
 import { SMASP, SilentToken, PrivacyMining } from '../typechain-types';
 
-const setupSmaspContract: DeployFunction = async (
-  hre: HardhatRuntimeEnvironment
-) => {
+const setupSmaspContract: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments, network } = hre;
   const { deploy, log } = deployments;
   const { deployer, multisig } = await getNamedAccounts();
 
-  const pmc: PrivacyMining = await ethers.getContract(
-    'PrivacyMining',
-    deployer
-  );
+  const pmc: PrivacyMining = await ethers.getContract('PrivacyMining', deployer);
   let smasp: SMASP = await ethers.getContract('SMASP', deployer);
   const wethToken: SilentToken = await ethers.getContract('WETH', deployer);
   const daiToken: SilentToken = await ethers.getContract('DAI', deployer);
@@ -21,9 +16,7 @@ const setupSmaspContract: DeployFunction = async (
 
   log('Deployer: Transferring ownership of SMASP to Owmer/Multisig...');
 
-  const transferSmaspOwnershipToMultisig = await smasp.transferOwnership(
-    multisig
-  );
+  const transferSmaspOwnershipToMultisig = await smasp.transferOwnership(multisig);
   await transferSmaspOwnershipToMultisig.wait(1);
 
   // Attach the multisig as a signer to the smasp instance

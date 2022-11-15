@@ -7,9 +7,7 @@ import { SilentToken } from '../typechain-types';
 const toBN = (v) => ethers.BigNumber.from(v.toString());
 const toUnit = (amount) => toBN(toWei(amount.toString(), 'ether'));
 
-const deployERC20Tokens: DeployFunction = async (
-  hre: HardhatRuntimeEnvironment
-) => {
+const deployERC20Tokens: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments, network } = hre;
   const { deployer } = await getNamedAccounts();
   const { deploy, log } = deployments;
@@ -24,14 +22,10 @@ const deployERC20Tokens: DeployFunction = async (
       contract: 'SilentToken',
       args: [`${tokens[i]} token`, tokens[i].toUpperCase(), toUnit(1000000)],
       log: true,
-      waitConfirmations: 0,
+      waitConfirmations: 0
     });
 
-    log(
-      `04.${i} - Deployed ${tokens[i].toUpperCase()} token at ${
-        _tokens[i].address
-      }`
-    );
+    log(`04.${i} - Deployed ${tokens[i].toUpperCase()} token at ${_tokens[i].address}`);
   }
 };
 

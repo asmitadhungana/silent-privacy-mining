@@ -14,7 +14,7 @@ const deployPMC: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     from: deployer,
     args: [silentToken.address, smasp.address],
     log: true,
-    waitConfirmations: 0,
+    waitConfirmations: 0
   });
 
   log(`07-Deployed 'PMC' at ${pmc.address} `);

@@ -1,9 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-const deploySMASPContract: DeployFunction = async (
-  hre: HardhatRuntimeEnvironment
-) => {
+const deploySMASPContract: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments, network } = hre;
   const { deploy, log, get } = deployments;
   const { deployer } = await getNamedAccounts();
@@ -13,7 +11,7 @@ const deploySMASPContract: DeployFunction = async (
     from: deployer,
     args: [],
     log: true,
-    waitConfirmations: 0,
+    waitConfirmations: 0
   });
 
   log(`06-Deployed 'SMASP' contract at ${smasp.address} `);

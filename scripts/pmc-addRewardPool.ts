@@ -13,11 +13,7 @@ export async function pmc_addRewardPool() {
   const rewardPoolAllocPoint = 100;
   const phase = 2;
 
-  const addRewardPoolTx = await pmc.addRewardPool(
-    weth.address,
-    phase,
-    rewardPoolAllocPoint + 100
-  );
+  const addRewardPoolTx = await pmc.addRewardPool(weth.address, phase, rewardPoolAllocPoint + 100);
   await addRewardPoolTx.wait(1);
 
   // OR

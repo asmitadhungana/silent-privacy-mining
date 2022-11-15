@@ -11,21 +11,11 @@ import type {
   Overrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type {
-  FunctionFragment,
-  Result,
-  EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../common";
+  utils
+} from 'ethers';
+import type { FunctionFragment, Result, EventFragment } from '@ethersproject/abi';
+import type { Listener, Provider } from '@ethersproject/providers';
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../../common';
 
 export declare namespace PrivacyMining {
   export type RewardPoolStruct = {
@@ -36,13 +26,7 @@ export declare namespace PrivacyMining {
     globalPoolBalance: PromiseOrValue<BigNumberish>;
   };
 
-  export type RewardPoolStructOutput = [
-    number,
-    BigNumber,
-    BigNumber,
-    BigNumber,
-    BigNumber
-  ] & {
+  export type RewardPoolStructOutput = [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
     phase: number;
     lastRewardTime: BigNumber;
     allocPoint: BigNumber;
@@ -53,249 +37,154 @@ export declare namespace PrivacyMining {
 
 export interface PrivacyMiningInterface extends utils.Interface {
   functions: {
-    "SILENT()": FunctionFragment;
-    "SMASP()": FunctionFragment;
-    "addRewardPool(uint256,uint256,uint256)": FunctionFragment;
-    "claimRewardsFromPool(uint256)": FunctionFragment;
-    "deployedPools(uint256)": FunctionFragment;
-    "depositAssetToPool(address,uint256,uint256)": FunctionFragment;
-    "getPendingRewards(uint256,address)": FunctionFragment;
-    "getRewardPoolInfo(uint256)": FunctionFragment;
-    "massUpdatePoolRewardVariables(uint256[],uint256)": FunctionFragment;
-    "owner()": FunctionFragment;
-    "paused()": FunctionFragment;
-    "phaseToRewardEmissionRate(uint256)": FunctionFragment;
-    "phaseToTotalAllocPoint(uint256)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "rewardPoolInfo(uint256)": FunctionFragment;
-    "setRewardEmissionRate(uint256,uint256)": FunctionFragment;
-    "stakeSilentToPool(uint256,uint256)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "unstakeSilentFromPool(uint256,uint256)": FunctionFragment;
-    "updatePoolRewardVariables(uint256)": FunctionFragment;
-    "updateRewardPoolAllocations(uint256,uint256,uint256)": FunctionFragment;
-    "userPoolInfo(address,uint256)": FunctionFragment;
+    'SILENT()': FunctionFragment;
+    'SMASP()': FunctionFragment;
+    'addRewardPool(uint256,uint256,uint256)': FunctionFragment;
+    'claimRewardsFromPool(uint256)': FunctionFragment;
+    'deployedPools(uint256)': FunctionFragment;
+    'depositAssetToPool(address,uint256,uint256)': FunctionFragment;
+    'getPendingRewards(uint256,address)': FunctionFragment;
+    'getRewardPoolInfo(uint256)': FunctionFragment;
+    'massUpdatePoolRewardVariables(uint256[],uint256)': FunctionFragment;
+    'owner()': FunctionFragment;
+    'paused()': FunctionFragment;
+    'phaseToRewardEmissionRate(uint256)': FunctionFragment;
+    'phaseToTotalAllocPoint(uint256)': FunctionFragment;
+    'renounceOwnership()': FunctionFragment;
+    'rewardPoolInfo(uint256)': FunctionFragment;
+    'setRewardEmissionRate(uint256,uint256)': FunctionFragment;
+    'stakeSilentToPool(uint256,uint256)': FunctionFragment;
+    'transferOwnership(address)': FunctionFragment;
+    'unstakeSilentFromPool(uint256,uint256)': FunctionFragment;
+    'updatePoolRewardVariables(uint256)': FunctionFragment;
+    'updateRewardPoolAllocations(uint256,uint256,uint256)': FunctionFragment;
+    'userPoolInfo(address,uint256)': FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "SILENT"
-      | "SMASP"
-      | "addRewardPool"
-      | "claimRewardsFromPool"
-      | "deployedPools"
-      | "depositAssetToPool"
-      | "getPendingRewards"
-      | "getRewardPoolInfo"
-      | "massUpdatePoolRewardVariables"
-      | "owner"
-      | "paused"
-      | "phaseToRewardEmissionRate"
-      | "phaseToTotalAllocPoint"
-      | "renounceOwnership"
-      | "rewardPoolInfo"
-      | "setRewardEmissionRate"
-      | "stakeSilentToPool"
-      | "transferOwnership"
-      | "unstakeSilentFromPool"
-      | "updatePoolRewardVariables"
-      | "updateRewardPoolAllocations"
-      | "userPoolInfo"
+      | 'SILENT'
+      | 'SMASP'
+      | 'addRewardPool'
+      | 'claimRewardsFromPool'
+      | 'deployedPools'
+      | 'depositAssetToPool'
+      | 'getPendingRewards'
+      | 'getRewardPoolInfo'
+      | 'massUpdatePoolRewardVariables'
+      | 'owner'
+      | 'paused'
+      | 'phaseToRewardEmissionRate'
+      | 'phaseToTotalAllocPoint'
+      | 'renounceOwnership'
+      | 'rewardPoolInfo'
+      | 'setRewardEmissionRate'
+      | 'stakeSilentToPool'
+      | 'transferOwnership'
+      | 'unstakeSilentFromPool'
+      | 'updatePoolRewardVariables'
+      | 'updateRewardPoolAllocations'
+      | 'userPoolInfo'
   ): FunctionFragment;
 
-  encodeFunctionData(functionFragment: "SILENT", values?: undefined): string;
-  encodeFunctionData(functionFragment: "SMASP", values?: undefined): string;
+  encodeFunctionData(functionFragment: 'SILENT', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'SMASP', values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "addRewardPool",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
+    functionFragment: 'addRewardPool',
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(functionFragment: 'claimRewardsFromPool', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(functionFragment: 'deployedPools', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(
+    functionFragment: 'depositAssetToPool',
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "claimRewardsFromPool",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "deployedPools",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "depositAssetToPool",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getPendingRewards",
+    functionFragment: 'getPendingRewards',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
   ): string;
+  encodeFunctionData(functionFragment: 'getRewardPoolInfo', values: [PromiseOrValue<BigNumberish>]): string;
   encodeFunctionData(
-    functionFragment: "getRewardPoolInfo",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "massUpdatePoolRewardVariables",
+    functionFragment: 'massUpdatePoolRewardVariables',
     values: [PromiseOrValue<BigNumberish>[], PromiseOrValue<BigNumberish>]
   ): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(functionFragment: "paused", values?: undefined): string;
+  encodeFunctionData(functionFragment: 'owner', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'paused', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'phaseToRewardEmissionRate', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(functionFragment: 'phaseToTotalAllocPoint', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(functionFragment: 'renounceOwnership', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'rewardPoolInfo', values: [PromiseOrValue<BigNumberish>]): string;
   encodeFunctionData(
-    functionFragment: "phaseToRewardEmissionRate",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "phaseToTotalAllocPoint",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "rewardPoolInfo",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setRewardEmissionRate",
+    functionFragment: 'setRewardEmissionRate',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "stakeSilentToPool",
+    functionFragment: 'stakeSilentToPool',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
+  encodeFunctionData(functionFragment: 'transferOwnership', values: [PromiseOrValue<string>]): string;
   encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "unstakeSilentFromPool",
+    functionFragment: 'unstakeSilentFromPool',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
+  encodeFunctionData(functionFragment: 'updatePoolRewardVariables', values: [PromiseOrValue<BigNumberish>]): string;
   encodeFunctionData(
-    functionFragment: "updatePoolRewardVariables",
-    values: [PromiseOrValue<BigNumberish>]
+    functionFragment: 'updateRewardPoolAllocations',
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "updateRewardPoolAllocations",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "userPoolInfo",
+    functionFragment: 'userPoolInfo',
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
 
-  decodeFunctionResult(functionFragment: "SILENT", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "SMASP", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "addRewardPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "claimRewardsFromPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "deployedPools",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "depositAssetToPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getPendingRewards",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getRewardPoolInfo",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "massUpdatePoolRewardVariables",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "phaseToRewardEmissionRate",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "phaseToTotalAllocPoint",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "renounceOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "rewardPoolInfo",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setRewardEmissionRate",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "stakeSilentToPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "transferOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "unstakeSilentFromPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "updatePoolRewardVariables",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "updateRewardPoolAllocations",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "userPoolInfo",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: 'SILENT', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'SMASP', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'addRewardPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'claimRewardsFromPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'deployedPools', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'depositAssetToPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getPendingRewards', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getRewardPoolInfo', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'massUpdatePoolRewardVariables', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'owner', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'paused', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'phaseToRewardEmissionRate', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'phaseToTotalAllocPoint', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'renounceOwnership', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'rewardPoolInfo', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'setRewardEmissionRate', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'stakeSilentToPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'transferOwnership', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'unstakeSilentFromPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'updatePoolRewardVariables', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'updateRewardPoolAllocations', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'userPoolInfo', data: BytesLike): Result;
 
   events: {
-    "LogDepositToPool(address,uint256,uint256)": EventFragment;
-    "LogRewardPaidByPool(uint256,address,uint256)": EventFragment;
-    "LogRewardPoolAdded(uint256,uint256,uint256)": EventFragment;
-    "LogSilentStakedToPool(address,uint256,uint256)": EventFragment;
-    "LogSilentUnstakedFromPool(address,uint256,uint256)": EventFragment;
-    "LogUpdatePoolRewards(uint256,uint256,uint256,uint256)": EventFragment;
-    "LogUpdateRewardEmissionRate(uint256,uint256)": EventFragment;
-    "LogUpdateRewardPool(uint256,uint256)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-    "Paused(address)": EventFragment;
-    "Unpaused(address)": EventFragment;
+    'LogDepositToPool(address,uint256,uint256)': EventFragment;
+    'LogRewardPaidByPool(uint256,address,uint256)': EventFragment;
+    'LogRewardPoolAdded(uint256,uint256,uint256)': EventFragment;
+    'LogSilentStakedToPool(address,uint256,uint256)': EventFragment;
+    'LogSilentUnstakedFromPool(address,uint256,uint256)': EventFragment;
+    'LogUpdatePoolRewards(uint256,uint256,uint256,uint256)': EventFragment;
+    'LogUpdateRewardEmissionRate(uint256,uint256)': EventFragment;
+    'LogUpdateRewardPool(uint256,uint256)': EventFragment;
+    'OwnershipTransferred(address,address)': EventFragment;
+    'Paused(address)': EventFragment;
+    'Unpaused(address)': EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "LogDepositToPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogRewardPaidByPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogRewardPoolAdded"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogSilentStakedToPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogSilentUnstakedFromPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogUpdatePoolRewards"): EventFragment;
-  getEvent(
-    nameOrSignatureOrTopic: "LogUpdateRewardEmissionRate"
-  ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogUpdateRewardPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogDepositToPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogRewardPaidByPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogRewardPoolAdded'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogSilentStakedToPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogSilentUnstakedFromPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogUpdatePoolRewards'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogUpdateRewardEmissionRate'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogUpdateRewardPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'OwnershipTransferred'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'Paused'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'Unpaused'): EventFragment;
 }
 
 export interface LogDepositToPoolEventObject {
@@ -303,52 +192,36 @@ export interface LogDepositToPoolEventObject {
   assetId: BigNumber;
   amount: BigNumber;
 }
-export type LogDepositToPoolEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  LogDepositToPoolEventObject
->;
+export type LogDepositToPoolEvent = TypedEvent<[string, BigNumber, BigNumber], LogDepositToPoolEventObject>;
 
-export type LogDepositToPoolEventFilter =
-  TypedEventFilter<LogDepositToPoolEvent>;
+export type LogDepositToPoolEventFilter = TypedEventFilter<LogDepositToPoolEvent>;
 
 export interface LogRewardPaidByPoolEventObject {
   assetId: BigNumber;
   user: string;
   amount: BigNumber;
 }
-export type LogRewardPaidByPoolEvent = TypedEvent<
-  [BigNumber, string, BigNumber],
-  LogRewardPaidByPoolEventObject
->;
+export type LogRewardPaidByPoolEvent = TypedEvent<[BigNumber, string, BigNumber], LogRewardPaidByPoolEventObject>;
 
-export type LogRewardPaidByPoolEventFilter =
-  TypedEventFilter<LogRewardPaidByPoolEvent>;
+export type LogRewardPaidByPoolEventFilter = TypedEventFilter<LogRewardPaidByPoolEvent>;
 
 export interface LogRewardPoolAddedEventObject {
   assetId: BigNumber;
   phase: BigNumber;
   allocPoint: BigNumber;
 }
-export type LogRewardPoolAddedEvent = TypedEvent<
-  [BigNumber, BigNumber, BigNumber],
-  LogRewardPoolAddedEventObject
->;
+export type LogRewardPoolAddedEvent = TypedEvent<[BigNumber, BigNumber, BigNumber], LogRewardPoolAddedEventObject>;
 
-export type LogRewardPoolAddedEventFilter =
-  TypedEventFilter<LogRewardPoolAddedEvent>;
+export type LogRewardPoolAddedEventFilter = TypedEventFilter<LogRewardPoolAddedEvent>;
 
 export interface LogSilentStakedToPoolEventObject {
   user: string;
   assetId: BigNumber;
   amount: BigNumber;
 }
-export type LogSilentStakedToPoolEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  LogSilentStakedToPoolEventObject
->;
+export type LogSilentStakedToPoolEvent = TypedEvent<[string, BigNumber, BigNumber], LogSilentStakedToPoolEventObject>;
 
-export type LogSilentStakedToPoolEventFilter =
-  TypedEventFilter<LogSilentStakedToPoolEvent>;
+export type LogSilentStakedToPoolEventFilter = TypedEventFilter<LogSilentStakedToPoolEvent>;
 
 export interface LogSilentUnstakedFromPoolEventObject {
   user: string;
@@ -360,8 +233,7 @@ export type LogSilentUnstakedFromPoolEvent = TypedEvent<
   LogSilentUnstakedFromPoolEventObject
 >;
 
-export type LogSilentUnstakedFromPoolEventFilter =
-  TypedEventFilter<LogSilentUnstakedFromPoolEvent>;
+export type LogSilentUnstakedFromPoolEventFilter = TypedEventFilter<LogSilentUnstakedFromPoolEvent>;
 
 export interface LogUpdatePoolRewardsEventObject {
   assetId: BigNumber;
@@ -374,8 +246,7 @@ export type LogUpdatePoolRewardsEvent = TypedEvent<
   LogUpdatePoolRewardsEventObject
 >;
 
-export type LogUpdatePoolRewardsEventFilter =
-  TypedEventFilter<LogUpdatePoolRewardsEvent>;
+export type LogUpdatePoolRewardsEventFilter = TypedEventFilter<LogUpdatePoolRewardsEvent>;
 
 export interface LogUpdateRewardEmissionRateEventObject {
   phase: BigNumber;
@@ -386,32 +257,23 @@ export type LogUpdateRewardEmissionRateEvent = TypedEvent<
   LogUpdateRewardEmissionRateEventObject
 >;
 
-export type LogUpdateRewardEmissionRateEventFilter =
-  TypedEventFilter<LogUpdateRewardEmissionRateEvent>;
+export type LogUpdateRewardEmissionRateEventFilter = TypedEventFilter<LogUpdateRewardEmissionRateEvent>;
 
 export interface LogUpdateRewardPoolEventObject {
   assetId: BigNumber;
   allocPoint: BigNumber;
 }
-export type LogUpdateRewardPoolEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  LogUpdateRewardPoolEventObject
->;
+export type LogUpdateRewardPoolEvent = TypedEvent<[BigNumber, BigNumber], LogUpdateRewardPoolEventObject>;
 
-export type LogUpdateRewardPoolEventFilter =
-  TypedEventFilter<LogUpdateRewardPoolEvent>;
+export type LogUpdateRewardPoolEventFilter = TypedEventFilter<LogUpdateRewardPoolEvent>;
 
 export interface OwnershipTransferredEventObject {
   previousOwner: string;
   newOwner: string;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
+export type OwnershipTransferredEvent = TypedEvent<[string, string], OwnershipTransferredEventObject>;
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
+export type OwnershipTransferredEventFilter = TypedEventFilter<OwnershipTransferredEvent>;
 
 export interface PausedEventObject {
   account: string;
@@ -440,13 +302,9 @@ export interface PrivacyMining extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TEvent>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
   listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this;
   removeAllListeners(eventName?: string): this;
   off: OnEvent<this>;
   on: OnEvent<this>;
@@ -470,10 +328,7 @@ export interface PrivacyMining extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    deployedPools(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    deployedPools(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     depositAssetToPool(
       _user: PromiseOrValue<string>,
@@ -503,19 +358,11 @@ export interface PrivacyMining extends BaseContract {
 
     paused(overrides?: CallOverrides): Promise<[boolean]>;
 
-    phaseToRewardEmissionRate(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    phaseToRewardEmissionRate(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    phaseToTotalAllocPoint(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    phaseToTotalAllocPoint(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+    renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>;
 
     rewardPoolInfo(
       arg0: PromiseOrValue<BigNumberish>,
@@ -595,10 +442,7 @@ export interface PrivacyMining extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  deployedPools(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  deployedPools(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
   depositAssetToPool(
     _user: PromiseOrValue<string>,
@@ -628,19 +472,11 @@ export interface PrivacyMining extends BaseContract {
 
   paused(overrides?: CallOverrides): Promise<boolean>;
 
-  phaseToRewardEmissionRate(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  phaseToRewardEmissionRate(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-  phaseToTotalAllocPoint(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  phaseToTotalAllocPoint(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-  renounceOwnership(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>;
 
   rewardPoolInfo(
     arg0: PromiseOrValue<BigNumberish>,
@@ -715,15 +551,9 @@ export interface PrivacyMining extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    claimRewardsFromPool(
-      _assetId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    claimRewardsFromPool(_assetId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<void>;
 
-    deployedPools(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    deployedPools(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     depositAssetToPool(
       _user: PromiseOrValue<string>,
@@ -753,15 +583,9 @@ export interface PrivacyMining extends BaseContract {
 
     paused(overrides?: CallOverrides): Promise<boolean>;
 
-    phaseToRewardEmissionRate(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    phaseToRewardEmissionRate(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    phaseToTotalAllocPoint(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    phaseToTotalAllocPoint(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
@@ -790,10 +614,7 @@ export interface PrivacyMining extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    transferOwnership(newOwner: PromiseOrValue<string>, overrides?: CallOverrides): Promise<void>;
 
     unstakeSilentFromPool(
       _assetId: PromiseOrValue<BigNumberish>,
@@ -828,18 +649,14 @@ export interface PrivacyMining extends BaseContract {
   };
 
   filters: {
-    "LogDepositToPool(address,uint256,uint256)"(
+    'LogDepositToPool(address,uint256,uint256)'(
       user?: null,
       assetId?: null,
       amount?: null
     ): LogDepositToPoolEventFilter;
-    LogDepositToPool(
-      user?: null,
-      assetId?: null,
-      amount?: null
-    ): LogDepositToPoolEventFilter;
+    LogDepositToPool(user?: null, assetId?: null, amount?: null): LogDepositToPoolEventFilter;
 
-    "LogRewardPaidByPool(uint256,address,uint256)"(
+    'LogRewardPaidByPool(uint256,address,uint256)'(
       assetId?: null,
       user?: null,
       amount?: PromiseOrValue<BigNumberish> | null
@@ -850,40 +667,28 @@ export interface PrivacyMining extends BaseContract {
       amount?: PromiseOrValue<BigNumberish> | null
     ): LogRewardPaidByPoolEventFilter;
 
-    "LogRewardPoolAdded(uint256,uint256,uint256)"(
+    'LogRewardPoolAdded(uint256,uint256,uint256)'(
       assetId?: null,
       phase?: null,
       allocPoint?: null
     ): LogRewardPoolAddedEventFilter;
-    LogRewardPoolAdded(
-      assetId?: null,
-      phase?: null,
-      allocPoint?: null
-    ): LogRewardPoolAddedEventFilter;
+    LogRewardPoolAdded(assetId?: null, phase?: null, allocPoint?: null): LogRewardPoolAddedEventFilter;
 
-    "LogSilentStakedToPool(address,uint256,uint256)"(
+    'LogSilentStakedToPool(address,uint256,uint256)'(
       user?: null,
       assetId?: null,
       amount?: null
     ): LogSilentStakedToPoolEventFilter;
-    LogSilentStakedToPool(
-      user?: null,
-      assetId?: null,
-      amount?: null
-    ): LogSilentStakedToPoolEventFilter;
+    LogSilentStakedToPool(user?: null, assetId?: null, amount?: null): LogSilentStakedToPoolEventFilter;
 
-    "LogSilentUnstakedFromPool(address,uint256,uint256)"(
+    'LogSilentUnstakedFromPool(address,uint256,uint256)'(
       user?: null,
       assetId?: null,
       amount?: null
     ): LogSilentUnstakedFromPoolEventFilter;
-    LogSilentUnstakedFromPool(
-      user?: null,
-      assetId?: null,
-      amount?: null
-    ): LogSilentUnstakedFromPoolEventFilter;
+    LogSilentUnstakedFromPool(user?: null, assetId?: null, amount?: null): LogSilentUnstakedFromPoolEventFilter;
 
-    "LogUpdatePoolRewards(uint256,uint256,uint256,uint256)"(
+    'LogUpdatePoolRewards(uint256,uint256,uint256,uint256)'(
       assetId?: null,
       lastRewardTime?: null,
       globalPoolBalance?: null,
@@ -896,25 +701,16 @@ export interface PrivacyMining extends BaseContract {
       accRewardPerShare?: null
     ): LogUpdatePoolRewardsEventFilter;
 
-    "LogUpdateRewardEmissionRate(uint256,uint256)"(
+    'LogUpdateRewardEmissionRate(uint256,uint256)'(
       phase?: null,
       rewardPerSecond?: null
     ): LogUpdateRewardEmissionRateEventFilter;
-    LogUpdateRewardEmissionRate(
-      phase?: null,
-      rewardPerSecond?: null
-    ): LogUpdateRewardEmissionRateEventFilter;
+    LogUpdateRewardEmissionRate(phase?: null, rewardPerSecond?: null): LogUpdateRewardEmissionRateEventFilter;
 
-    "LogUpdateRewardPool(uint256,uint256)"(
-      assetId?: null,
-      allocPoint?: null
-    ): LogUpdateRewardPoolEventFilter;
-    LogUpdateRewardPool(
-      assetId?: null,
-      allocPoint?: null
-    ): LogUpdateRewardPoolEventFilter;
+    'LogUpdateRewardPool(uint256,uint256)'(assetId?: null, allocPoint?: null): LogUpdateRewardPoolEventFilter;
+    LogUpdateRewardPool(assetId?: null, allocPoint?: null): LogUpdateRewardPoolEventFilter;
 
-    "OwnershipTransferred(address,address)"(
+    'OwnershipTransferred(address,address)'(
       previousOwner?: PromiseOrValue<string> | null,
       newOwner?: PromiseOrValue<string> | null
     ): OwnershipTransferredEventFilter;
@@ -923,10 +719,10 @@ export interface PrivacyMining extends BaseContract {
       newOwner?: PromiseOrValue<string> | null
     ): OwnershipTransferredEventFilter;
 
-    "Paused(address)"(account?: null): PausedEventFilter;
+    'Paused(address)'(account?: null): PausedEventFilter;
     Paused(account?: null): PausedEventFilter;
 
-    "Unpaused(address)"(account?: null): UnpausedEventFilter;
+    'Unpaused(address)'(account?: null): UnpausedEventFilter;
     Unpaused(account?: null): UnpausedEventFilter;
   };
 
@@ -947,10 +743,7 @@ export interface PrivacyMining extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    deployedPools(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    deployedPools(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     depositAssetToPool(
       _user: PromiseOrValue<string>,
@@ -965,10 +758,7 @@ export interface PrivacyMining extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getRewardPoolInfo(
-      _assetId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getRewardPoolInfo(_assetId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     massUpdatePoolRewardVariables(
       _assetIds: PromiseOrValue<BigNumberish>[],
@@ -980,24 +770,13 @@ export interface PrivacyMining extends BaseContract {
 
     paused(overrides?: CallOverrides): Promise<BigNumber>;
 
-    phaseToRewardEmissionRate(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    phaseToRewardEmissionRate(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    phaseToTotalAllocPoint(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    phaseToTotalAllocPoint(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
+    renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<BigNumber>;
 
-    rewardPoolInfo(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    rewardPoolInfo(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     setRewardEmissionRate(
       _phase: PromiseOrValue<BigNumberish>,
@@ -1058,10 +837,7 @@ export interface PrivacyMining extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    deployedPools(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    deployedPools(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     depositAssetToPool(
       _user: PromiseOrValue<string>,
@@ -1076,10 +852,7 @@ export interface PrivacyMining extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getRewardPoolInfo(
-      _assetId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    getRewardPoolInfo(_assetId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     massUpdatePoolRewardVariables(
       _assetIds: PromiseOrValue<BigNumberish>[],
@@ -1101,14 +874,9 @@ export interface PrivacyMining extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<PopulatedTransaction>;
 
-    rewardPoolInfo(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    rewardPoolInfo(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     setRewardEmissionRate(
       _phase: PromiseOrValue<BigNumberish>,

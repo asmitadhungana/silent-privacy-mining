@@ -8,14 +8,8 @@ const setupPmc: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { log } = deployments;
   const { deployer, multisig } = await getNamedAccounts();
 
-  const pmc: PrivacyMining = await ethers.getContract(
-    'PrivacyMining',
-    deployer
-  );
-  const silentToken: SilentToken = await ethers.getContract(
-    'SilentToken',
-    deployer
-  );
+  const pmc: PrivacyMining = await ethers.getContract('PrivacyMining', deployer);
+  const silentToken: SilentToken = await ethers.getContract('SilentToken', deployer);
 
   log('Transferring ownership of PMC to Owmer/Multisig...');
 
@@ -24,9 +18,7 @@ const setupPmc: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   log(`09.1 - PMC setup successful: Mutisig ${multisig} set as PMC owner`);
 
-  log(
-    'Transferring half of Silent tokens from the initial deployer to multisig...'
-  );
+  log('Transferring half of Silent tokens from the initial deployer to multisig...');
   const silentTotalSupply = await silentToken.totalSupply();
   await silentToken.transfer(multisig, silentTotalSupply.div(2));
   log(`09.2 - PMC setup successful: Mutisig ${multisig} set as PMC owner`);

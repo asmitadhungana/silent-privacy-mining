@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import { Stack } from '@mui/material';
 import theme from './styles/Theme';
-import {
-  CustomMenu,
-  HeaderField,
-  PageHeader,
-  PageText,
-  SelectField
-} from './styles/HeaderStyles';
+import { CustomMenu, HeaderField, PageHeader, PageText, SelectField } from './styles/HeaderStyles';
 import Earn from './Earn';
 import Claim from './Claim';
 import { ContainedButton } from './styles/CustomButton';
@@ -34,22 +28,10 @@ const Main = () => {
     <>
       <div>
         <PageHeader>Privacy Mining Program</PageHeader>
-        <PageText marginTop={1.5}>
-          Earn Silent Rewards by Depositing assets to your silent account
-        </PageText>
+        <PageText marginTop={1.5}>Earn Silent Rewards by Depositing assets to your silent account</PageText>
         <Stack spacing={1} direction="row" marginTop={3} marginLeft={4}>
-          <HeaderField
-            id="outlined-basic"
-            label="Search for Tokens to Deposit"
-            variant="outlined"
-          />
-          <SelectField
-            id="select-phases"
-            select
-            value={phase}
-            onChange={handleChange}
-            variant="outlined"
-          >
+          <HeaderField id="outlined-basic" label="Search for Tokens to Deposit" variant="outlined" />
+          <SelectField id="select-phases" select value={phase} onChange={handleChange} variant="outlined">
             {phases.map((option) => (
               <CustomMenu key={option.value} value={option.value}>
                 {option.label}

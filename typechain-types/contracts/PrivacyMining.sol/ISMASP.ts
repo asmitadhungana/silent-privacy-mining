@@ -11,34 +11,22 @@ import type {
   Overrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../common";
+  utils
+} from 'ethers';
+import type { FunctionFragment, Result } from '@ethersproject/abi';
+import type { Listener, Provider } from '@ethersproject/providers';
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../../common';
 
 export interface ISMASPInterface extends utils.Interface {
   functions: {
-    "assetIdToToken(uint256)": FunctionFragment;
+    'assetIdToToken(uint256)': FunctionFragment;
   };
 
-  getFunction(nameOrSignatureOrTopic: "assetIdToToken"): FunctionFragment;
+  getFunction(nameOrSignatureOrTopic: 'assetIdToToken'): FunctionFragment;
 
-  encodeFunctionData(
-    functionFragment: "assetIdToToken",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
+  encodeFunctionData(functionFragment: 'assetIdToToken', values: [PromiseOrValue<BigNumberish>]): string;
 
-  decodeFunctionResult(
-    functionFragment: "assetIdToToken",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: 'assetIdToToken', data: BytesLike): Result;
 
   events: {};
 }
@@ -56,13 +44,9 @@ export interface ISMASP extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TEvent>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
   listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this;
   removeAllListeners(eventName?: string): this;
   off: OnEvent<this>;
   on: OnEvent<this>;
@@ -82,10 +66,7 @@ export interface ISMASP extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    assetIdToToken(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<string>;
+    assetIdToToken(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {};

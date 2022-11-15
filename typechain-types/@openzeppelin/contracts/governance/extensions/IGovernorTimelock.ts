@@ -12,88 +12,75 @@ import type {
   PayableOverrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type {
-  FunctionFragment,
-  Result,
-  EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../../../common";
+  utils
+} from 'ethers';
+import type { FunctionFragment, Result, EventFragment } from '@ethersproject/abi';
+import type { Listener, Provider } from '@ethersproject/providers';
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../../../../common';
 
 export interface IGovernorTimelockInterface extends utils.Interface {
   functions: {
-    "COUNTING_MODE()": FunctionFragment;
-    "castVote(uint256,uint8)": FunctionFragment;
-    "castVoteBySig(uint256,uint8,uint8,bytes32,bytes32)": FunctionFragment;
-    "castVoteWithReason(uint256,uint8,string)": FunctionFragment;
-    "castVoteWithReasonAndParams(uint256,uint8,string,bytes)": FunctionFragment;
-    "castVoteWithReasonAndParamsBySig(uint256,uint8,string,bytes,uint8,bytes32,bytes32)": FunctionFragment;
-    "execute(address[],uint256[],bytes[],bytes32)": FunctionFragment;
-    "getVotes(address,uint256)": FunctionFragment;
-    "getVotesWithParams(address,uint256,bytes)": FunctionFragment;
-    "hasVoted(uint256,address)": FunctionFragment;
-    "hashProposal(address[],uint256[],bytes[],bytes32)": FunctionFragment;
-    "name()": FunctionFragment;
-    "proposalDeadline(uint256)": FunctionFragment;
-    "proposalEta(uint256)": FunctionFragment;
-    "proposalSnapshot(uint256)": FunctionFragment;
-    "propose(address[],uint256[],bytes[],string)": FunctionFragment;
-    "queue(address[],uint256[],bytes[],bytes32)": FunctionFragment;
-    "quorum(uint256)": FunctionFragment;
-    "state(uint256)": FunctionFragment;
-    "supportsInterface(bytes4)": FunctionFragment;
-    "timelock()": FunctionFragment;
-    "version()": FunctionFragment;
-    "votingDelay()": FunctionFragment;
-    "votingPeriod()": FunctionFragment;
+    'COUNTING_MODE()': FunctionFragment;
+    'castVote(uint256,uint8)': FunctionFragment;
+    'castVoteBySig(uint256,uint8,uint8,bytes32,bytes32)': FunctionFragment;
+    'castVoteWithReason(uint256,uint8,string)': FunctionFragment;
+    'castVoteWithReasonAndParams(uint256,uint8,string,bytes)': FunctionFragment;
+    'castVoteWithReasonAndParamsBySig(uint256,uint8,string,bytes,uint8,bytes32,bytes32)': FunctionFragment;
+    'execute(address[],uint256[],bytes[],bytes32)': FunctionFragment;
+    'getVotes(address,uint256)': FunctionFragment;
+    'getVotesWithParams(address,uint256,bytes)': FunctionFragment;
+    'hasVoted(uint256,address)': FunctionFragment;
+    'hashProposal(address[],uint256[],bytes[],bytes32)': FunctionFragment;
+    'name()': FunctionFragment;
+    'proposalDeadline(uint256)': FunctionFragment;
+    'proposalEta(uint256)': FunctionFragment;
+    'proposalSnapshot(uint256)': FunctionFragment;
+    'propose(address[],uint256[],bytes[],string)': FunctionFragment;
+    'queue(address[],uint256[],bytes[],bytes32)': FunctionFragment;
+    'quorum(uint256)': FunctionFragment;
+    'state(uint256)': FunctionFragment;
+    'supportsInterface(bytes4)': FunctionFragment;
+    'timelock()': FunctionFragment;
+    'version()': FunctionFragment;
+    'votingDelay()': FunctionFragment;
+    'votingPeriod()': FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "COUNTING_MODE"
-      | "castVote"
-      | "castVoteBySig"
-      | "castVoteWithReason"
-      | "castVoteWithReasonAndParams"
-      | "castVoteWithReasonAndParamsBySig"
-      | "execute"
-      | "getVotes"
-      | "getVotesWithParams"
-      | "hasVoted"
-      | "hashProposal"
-      | "name"
-      | "proposalDeadline"
-      | "proposalEta"
-      | "proposalSnapshot"
-      | "propose"
-      | "queue"
-      | "quorum"
-      | "state"
-      | "supportsInterface"
-      | "timelock"
-      | "version"
-      | "votingDelay"
-      | "votingPeriod"
+      | 'COUNTING_MODE'
+      | 'castVote'
+      | 'castVoteBySig'
+      | 'castVoteWithReason'
+      | 'castVoteWithReasonAndParams'
+      | 'castVoteWithReasonAndParamsBySig'
+      | 'execute'
+      | 'getVotes'
+      | 'getVotesWithParams'
+      | 'hasVoted'
+      | 'hashProposal'
+      | 'name'
+      | 'proposalDeadline'
+      | 'proposalEta'
+      | 'proposalSnapshot'
+      | 'propose'
+      | 'queue'
+      | 'quorum'
+      | 'state'
+      | 'supportsInterface'
+      | 'timelock'
+      | 'version'
+      | 'votingDelay'
+      | 'votingPeriod'
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: 'COUNTING_MODE', values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "COUNTING_MODE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "castVote",
+    functionFragment: 'castVote',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "castVoteBySig",
+    functionFragment: 'castVoteBySig',
     values: [
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
@@ -103,15 +90,11 @@ export interface IGovernorTimelockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "castVoteWithReason",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<string>
-    ]
+    functionFragment: 'castVoteWithReason',
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "castVoteWithReasonAndParams",
+    functionFragment: 'castVoteWithReasonAndParams',
     values: [
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
@@ -120,7 +103,7 @@ export interface IGovernorTimelockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "castVoteWithReasonAndParamsBySig",
+    functionFragment: 'castVoteWithReasonAndParamsBySig',
     values: [
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
@@ -132,7 +115,7 @@ export interface IGovernorTimelockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "execute",
+    functionFragment: 'execute',
     values: [
       PromiseOrValue<string>[],
       PromiseOrValue<BigNumberish>[],
@@ -141,23 +124,19 @@ export interface IGovernorTimelockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "getVotes",
+    functionFragment: 'getVotes',
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "getVotesWithParams",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BytesLike>
-    ]
+    functionFragment: 'getVotesWithParams',
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>, PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
-    functionFragment: "hasVoted",
+    functionFragment: 'hasVoted',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "hashProposal",
+    functionFragment: 'hashProposal',
     values: [
       PromiseOrValue<string>[],
       PromiseOrValue<BigNumberish>[],
@@ -165,21 +144,12 @@ export interface IGovernorTimelockInterface extends utils.Interface {
       PromiseOrValue<BytesLike>
     ]
   ): string;
-  encodeFunctionData(functionFragment: "name", values?: undefined): string;
+  encodeFunctionData(functionFragment: 'name', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'proposalDeadline', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(functionFragment: 'proposalEta', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(functionFragment: 'proposalSnapshot', values: [PromiseOrValue<BigNumberish>]): string;
   encodeFunctionData(
-    functionFragment: "proposalDeadline",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "proposalEta",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "proposalSnapshot",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "propose",
+    functionFragment: 'propose',
     values: [
       PromiseOrValue<string>[],
       PromiseOrValue<BigNumberish>[],
@@ -188,7 +158,7 @@ export interface IGovernorTimelockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "queue",
+    functionFragment: 'queue',
     values: [
       PromiseOrValue<string>[],
       PromiseOrValue<BigNumberish>[],
@@ -196,120 +166,62 @@ export interface IGovernorTimelockInterface extends utils.Interface {
       PromiseOrValue<BytesLike>
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "quorum",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "state",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "supportsInterface",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(functionFragment: "timelock", values?: undefined): string;
-  encodeFunctionData(functionFragment: "version", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "votingDelay",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "votingPeriod",
-    values?: undefined
-  ): string;
+  encodeFunctionData(functionFragment: 'quorum', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(functionFragment: 'state', values: [PromiseOrValue<BigNumberish>]): string;
+  encodeFunctionData(functionFragment: 'supportsInterface', values: [PromiseOrValue<BytesLike>]): string;
+  encodeFunctionData(functionFragment: 'timelock', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'version', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'votingDelay', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'votingPeriod', values?: undefined): string;
 
-  decodeFunctionResult(
-    functionFragment: "COUNTING_MODE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "castVote", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "castVoteBySig",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "castVoteWithReason",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "castVoteWithReasonAndParams",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "castVoteWithReasonAndParamsBySig",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "execute", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getVotes", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getVotesWithParams",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "hasVoted", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "hashProposal",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "proposalDeadline",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "proposalEta",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "proposalSnapshot",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "propose", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "queue", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "quorum", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "state", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "supportsInterface",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "timelock", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "version", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "votingDelay",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "votingPeriod",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: 'COUNTING_MODE', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'castVote', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'castVoteBySig', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'castVoteWithReason', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'castVoteWithReasonAndParams', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'castVoteWithReasonAndParamsBySig', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'execute', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getVotes', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getVotesWithParams', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'hasVoted', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'hashProposal', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'name', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'proposalDeadline', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'proposalEta', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'proposalSnapshot', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'propose', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'queue', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'quorum', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'state', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'supportsInterface', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'timelock', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'version', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'votingDelay', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'votingPeriod', data: BytesLike): Result;
 
   events: {
-    "ProposalCanceled(uint256)": EventFragment;
-    "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)": EventFragment;
-    "ProposalExecuted(uint256)": EventFragment;
-    "ProposalQueued(uint256,uint256)": EventFragment;
-    "VoteCast(address,uint256,uint8,uint256,string)": EventFragment;
-    "VoteCastWithParams(address,uint256,uint8,uint256,string,bytes)": EventFragment;
+    'ProposalCanceled(uint256)': EventFragment;
+    'ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)': EventFragment;
+    'ProposalExecuted(uint256)': EventFragment;
+    'ProposalQueued(uint256,uint256)': EventFragment;
+    'VoteCast(address,uint256,uint8,uint256,string)': EventFragment;
+    'VoteCastWithParams(address,uint256,uint8,uint256,string,bytes)': EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCreated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalExecuted"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalQueued"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "VoteCast"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "VoteCastWithParams"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'ProposalCanceled'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'ProposalCreated'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'ProposalExecuted'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'ProposalQueued'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'VoteCast'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'VoteCastWithParams'): EventFragment;
 }
 
 export interface ProposalCanceledEventObject {
   proposalId: BigNumber;
 }
-export type ProposalCanceledEvent = TypedEvent<
-  [BigNumber],
-  ProposalCanceledEventObject
->;
+export type ProposalCanceledEvent = TypedEvent<[BigNumber], ProposalCanceledEventObject>;
 
-export type ProposalCanceledEventFilter =
-  TypedEventFilter<ProposalCanceledEvent>;
+export type ProposalCanceledEventFilter = TypedEventFilter<ProposalCanceledEvent>;
 
 export interface ProposalCreatedEventObject {
   proposalId: BigNumber;
@@ -323,17 +235,7 @@ export interface ProposalCreatedEventObject {
   description: string;
 }
 export type ProposalCreatedEvent = TypedEvent<
-  [
-    BigNumber,
-    string,
-    string[],
-    BigNumber[],
-    string[],
-    string[],
-    BigNumber,
-    BigNumber,
-    string
-  ],
+  [BigNumber, string, string[], BigNumber[], string[], string[], BigNumber, BigNumber, string],
   ProposalCreatedEventObject
 >;
 
@@ -342,22 +244,15 @@ export type ProposalCreatedEventFilter = TypedEventFilter<ProposalCreatedEvent>;
 export interface ProposalExecutedEventObject {
   proposalId: BigNumber;
 }
-export type ProposalExecutedEvent = TypedEvent<
-  [BigNumber],
-  ProposalExecutedEventObject
->;
+export type ProposalExecutedEvent = TypedEvent<[BigNumber], ProposalExecutedEventObject>;
 
-export type ProposalExecutedEventFilter =
-  TypedEventFilter<ProposalExecutedEvent>;
+export type ProposalExecutedEventFilter = TypedEventFilter<ProposalExecutedEvent>;
 
 export interface ProposalQueuedEventObject {
   proposalId: BigNumber;
   eta: BigNumber;
 }
-export type ProposalQueuedEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  ProposalQueuedEventObject
->;
+export type ProposalQueuedEvent = TypedEvent<[BigNumber, BigNumber], ProposalQueuedEventObject>;
 
 export type ProposalQueuedEventFilter = TypedEventFilter<ProposalQueuedEvent>;
 
@@ -368,10 +263,7 @@ export interface VoteCastEventObject {
   weight: BigNumber;
   reason: string;
 }
-export type VoteCastEvent = TypedEvent<
-  [string, BigNumber, number, BigNumber, string],
-  VoteCastEventObject
->;
+export type VoteCastEvent = TypedEvent<[string, BigNumber, number, BigNumber, string], VoteCastEventObject>;
 
 export type VoteCastEventFilter = TypedEventFilter<VoteCastEvent>;
 
@@ -388,8 +280,7 @@ export type VoteCastWithParamsEvent = TypedEvent<
   VoteCastWithParamsEventObject
 >;
 
-export type VoteCastWithParamsEventFilter =
-  TypedEventFilter<VoteCastWithParamsEvent>;
+export type VoteCastWithParamsEventFilter = TypedEventFilter<VoteCastWithParamsEvent>;
 
 export interface IGovernorTimelock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -404,13 +295,9 @@ export interface IGovernorTimelock extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TEvent>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
   listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this;
   removeAllListeners(eventName?: string): this;
   off: OnEvent<this>;
   on: OnEvent<this>;
@@ -498,20 +385,11 @@ export interface IGovernorTimelock extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<[string]>;
 
-    proposalDeadline(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    proposalDeadline(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    proposalEta(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    proposalEta(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    proposalSnapshot(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    proposalSnapshot(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     propose(
       targets: PromiseOrValue<string>[],
@@ -529,20 +407,11 @@ export interface IGovernorTimelock extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    quorum(
-      blockNumber: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    quorum(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    state(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[number]>;
+    state(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[number]>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<[boolean]>;
 
     timelock(overrides?: CallOverrides): Promise<[string]>;
 
@@ -633,20 +502,11 @@ export interface IGovernorTimelock extends BaseContract {
 
   name(overrides?: CallOverrides): Promise<string>;
 
-  proposalDeadline(
-    proposalId: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  proposalDeadline(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-  proposalEta(
-    proposalId: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  proposalEta(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-  proposalSnapshot(
-    proposalId: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  proposalSnapshot(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
   propose(
     targets: PromiseOrValue<string>[],
@@ -664,20 +524,11 @@ export interface IGovernorTimelock extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  quorum(
-    blockNumber: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  quorum(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-  state(
-    proposalId: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<number>;
+  state(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<number>;
 
-  supportsInterface(
-    interfaceId: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
   timelock(overrides?: CallOverrides): Promise<string>;
 
@@ -768,20 +619,11 @@ export interface IGovernorTimelock extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<string>;
 
-    proposalDeadline(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    proposalDeadline(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    proposalEta(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    proposalEta(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    proposalSnapshot(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    proposalSnapshot(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     propose(
       targets: PromiseOrValue<string>[],
@@ -799,20 +641,11 @@ export interface IGovernorTimelock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    quorum(
-      blockNumber: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    quorum(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    state(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<number>;
+    state(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<number>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
     timelock(overrides?: CallOverrides): Promise<string>;
 
@@ -824,10 +657,10 @@ export interface IGovernorTimelock extends BaseContract {
   };
 
   filters: {
-    "ProposalCanceled(uint256)"(proposalId?: null): ProposalCanceledEventFilter;
+    'ProposalCanceled(uint256)'(proposalId?: null): ProposalCanceledEventFilter;
     ProposalCanceled(proposalId?: null): ProposalCanceledEventFilter;
 
-    "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"(
+    'ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)'(
       proposalId?: null,
       proposer?: null,
       targets?: null,
@@ -850,16 +683,13 @@ export interface IGovernorTimelock extends BaseContract {
       description?: null
     ): ProposalCreatedEventFilter;
 
-    "ProposalExecuted(uint256)"(proposalId?: null): ProposalExecutedEventFilter;
+    'ProposalExecuted(uint256)'(proposalId?: null): ProposalExecutedEventFilter;
     ProposalExecuted(proposalId?: null): ProposalExecutedEventFilter;
 
-    "ProposalQueued(uint256,uint256)"(
-      proposalId?: null,
-      eta?: null
-    ): ProposalQueuedEventFilter;
+    'ProposalQueued(uint256,uint256)'(proposalId?: null, eta?: null): ProposalQueuedEventFilter;
     ProposalQueued(proposalId?: null, eta?: null): ProposalQueuedEventFilter;
 
-    "VoteCast(address,uint256,uint8,uint256,string)"(
+    'VoteCast(address,uint256,uint8,uint256,string)'(
       voter?: PromiseOrValue<string> | null,
       proposalId?: null,
       support?: null,
@@ -874,7 +704,7 @@ export interface IGovernorTimelock extends BaseContract {
       reason?: null
     ): VoteCastEventFilter;
 
-    "VoteCastWithParams(address,uint256,uint8,uint256,string,bytes)"(
+    'VoteCastWithParams(address,uint256,uint8,uint256,string,bytes)'(
       voter?: PromiseOrValue<string> | null,
       proposalId?: null,
       support?: null,
@@ -973,20 +803,11 @@ export interface IGovernorTimelock extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
 
-    proposalDeadline(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    proposalDeadline(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    proposalEta(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    proposalEta(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    proposalSnapshot(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    proposalSnapshot(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     propose(
       targets: PromiseOrValue<string>[],
@@ -1004,20 +825,11 @@ export interface IGovernorTimelock extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    quorum(
-      blockNumber: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    quorum(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    state(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    state(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
     timelock(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1114,10 +926,7 @@ export interface IGovernorTimelock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    proposalEta(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    proposalEta(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     proposalSnapshot(
       proposalId: PromiseOrValue<BigNumberish>,
@@ -1140,20 +949,11 @@ export interface IGovernorTimelock extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    quorum(
-      blockNumber: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    quorum(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    state(
-      proposalId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    state(proposalId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     timelock(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

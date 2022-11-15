@@ -4,19 +4,11 @@ import { MainBox } from './styles/EarnStyles';
 import { ContainedButton } from './styles/CustomButton';
 import { Stack } from '@mui/material';
 import { PageHeader, CustomMenu } from './styles/HeaderStyles';
-import {
-  AdminSelectField,
-  BoxHeader,
-  BoxSubHeader
-} from './styles/AdminStyles';
+import { AdminSelectField, BoxHeader, BoxSubHeader } from './styles/AdminStyles';
 import { ModalField } from './styles/ModalStyles';
 import { ethers } from 'ethers';
 import tokenAbi from '../abis/token.json';
-import {
-  getPmcContract,
-  getSmaspContract,
-  getSigner
-} from '../utils/contracts';
+import { getPmcContract, getSmaspContract, getSigner } from '../utils/contracts';
 
 const divStyle = {
   display: 'flex',
@@ -117,12 +109,7 @@ const Admin = () => {
       <MainBox style={{ margin: '25px 40px' }}>
         {/* Asset Pool */}
         <BoxHeader>SMASP</BoxHeader>
-        <Stack
-          spacing={1}
-          direction="column"
-          alignItems="center"
-          alignContent="justify-between"
-        >
+        <Stack spacing={1} direction="column" alignItems="center" alignContent="justify-between">
           <BoxSubHeader>CREATE A NEW ASSET POOL</BoxSubHeader>
           <div style={divStyle}>
             <strong>Token</strong>
@@ -146,12 +133,7 @@ const Admin = () => {
       <MainBox style={{ margin: '25px 40px' }}>
         {/* Reward Pool */}
         <BoxHeader>PMC</BoxHeader>
-        <Stack
-          spacing={1}
-          direction="column"
-          alignItems="center"
-          alignContent="justify-between"
-        >
+        <Stack spacing={1} direction="column" alignItems="center" alignContent="justify-between">
           <BoxSubHeader>CREATE A NEW REWARD POOL</BoxSubHeader>
           <Stack style={divStyle}>
             <div style={divStyle}>
@@ -181,17 +163,11 @@ const Admin = () => {
             </div>
             <div style={divStyle}>
               <strong>Reward</strong>
-              <ModalField
-                style={{ width: '65%' }}
-                onChange={(e) => setReward(parseInt(e.target.value))}
-              />
+              <ModalField style={{ width: '65%' }} onChange={(e) => setReward(parseInt(e.target.value))} />
             </div>
             <div style={divStyle}>
               <strong>Reward Duration</strong>
-              <ModalField
-                style={{ width: '65%' }}
-                onChange={(e) => setRewardDuration(parseInt(e.target.value))}
-              />
+              <ModalField style={{ width: '65%' }} onChange={(e) => setRewardDuration(parseInt(e.target.value))} />
             </div>
           </Stack>
           <ContainedButton
@@ -211,27 +187,16 @@ const Admin = () => {
         </Stack>
       </MainBox>
       <MainBox style={{ margin: '25px 40px' }}>
-        <Stack
-          spacing={1}
-          direction="column"
-          alignItems="center"
-          alignContent="justify-between"
-        >
+        <Stack spacing={1} direction="column" alignItems="center" alignContent="justify-between">
           <BoxSubHeader>UPDATE A REWARD POOL</BoxSubHeader>
           <Stack style={divStyle}>
             <div style={divStyle}>
               <strong>Asset Id</strong>
-              <ModalField
-                style={{ width: '65%' }}
-                onChange={(e) => setAssetId(e.target.value)}
-              />
+              <ModalField style={{ width: '65%' }} onChange={(e) => setAssetId(e.target.value)} />
             </div>
             <div style={divStyle}>
               <strong>Reward</strong>
-              <ModalField
-                style={{ width: '65%' }}
-                onChange={(e) => setReward(parseInt(e.target.value))}
-              />
+              <ModalField style={{ width: '65%' }} onChange={(e) => setReward(parseInt(e.target.value))} />
             </div>
           </Stack>
           <ContainedButton

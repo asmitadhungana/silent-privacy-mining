@@ -24,17 +24,12 @@ export function SignMessage(): ReactElement {
       return;
     }
 
-    async function signMessage(
-      library: Provider,
-      account: string
-    ): Promise<void> {
+    async function signMessage(library: Provider, account: string): Promise<void> {
       try {
         const signature = await library.getSigner(account).signMessage('👋');
         window.alert(`Success!\n\n${signature}`);
       } catch (error: any) {
-        window.alert(
-          'Error!' + (error && error.message ? `\n\n${error.message}` : '')
-        );
+        window.alert('Error!' + (error && error.message ? `\n\n${error.message}` : ''));
       }
     }
 

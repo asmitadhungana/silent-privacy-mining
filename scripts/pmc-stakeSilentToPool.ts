@@ -7,11 +7,7 @@ import { getNamedAccounts, getUnnamedAccounts } from 'hardhat';
 const toBN = (v) => ethers.BigNumber.from(v.toString());
 const toUnit = (amount) => toBN(toWei(amount.toString(), 'ether'));
 
-const token_approve_transfer = async (
-  _token: SilentToken,
-  _to,
-  _allowance: BigNumber
-) => {
+const token_approve_transfer = async (_token: SilentToken, _to, _allowance: BigNumber) => {
   const tokenApproveTx = await _token.approve(_to, _allowance);
   tokenApproveTx.wait(1);
 };
@@ -21,14 +17,8 @@ export async function pmc_stakeSilentToPool() {
   const { deployer } = await getNamedAccounts();
 
   const weth: SilentToken = await ethers.getContract('WETH');
-  const silentToken: SilentToken = await ethers.getContract(
-    'SilentToken',
-    deployer
-  );
-  const pmc: PrivacyMining = await ethers.getContract(
-    'PrivacyMining',
-    deployer
-  );
+  const silentToken: SilentToken = await ethers.getContract('SilentToken', deployer);
+  const pmc: PrivacyMining = await ethers.getContract('PrivacyMining', deployer);
 
   const stakeAmount = toUnit('100');
 

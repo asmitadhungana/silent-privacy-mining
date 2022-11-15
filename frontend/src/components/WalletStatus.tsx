@@ -59,9 +59,7 @@ function BlockNumber(): ReactElement {
           setBlockNumber(undefined);
         }
 
-        window.alert(
-          'Error!' + (error && error.message ? `\n\n${error.message}` : '')
-        );
+        window.alert('Error!' + (error && error.message ? `\n\n${error.message}` : ''));
       }
     }
 
@@ -105,9 +103,7 @@ function Account(): ReactElement {
         {typeof account === 'undefined'
           ? ''
           : account
-          ? `${account.substring(0, 6)}...${account.substring(
-              account.length - 4
-            )}`
+          ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}`
           : ''}
       </span>
     </>
@@ -126,10 +122,7 @@ function Balance(): ReactElement {
 
     let stale = false;
 
-    async function getBalance(
-      library: Provider,
-      account: string
-    ): Promise<void> {
+    async function getBalance(library: Provider, account: string): Promise<void> {
       const balance: ethers.BigNumber = await library.getBalance(account);
 
       try {
@@ -140,9 +133,7 @@ function Balance(): ReactElement {
         if (!stale) {
           setBalance(undefined);
 
-          window.alert(
-            'Error!' + (error && error.message ? `\n\n${error.message}` : '')
-          );
+          window.alert('Error!' + (error && error.message ? `\n\n${error.message}` : ''));
         }
       }
     }
@@ -174,11 +165,7 @@ function Balance(): ReactElement {
         💰
       </span>
       <span>
-        {balance === null
-          ? 'Error'
-          : balance
-          ? `Ξ${Math.round(+ethers.utils.formatEther(balance) * 1e4) / 1e4}`
-          : ''}
+        {balance === null ? 'Error' : balance ? `Ξ${Math.round(+ethers.utils.formatEther(balance) * 1e4) / 1e4}` : ''}
       </span>
     </>
   );
@@ -197,10 +184,7 @@ function NextNonce(): ReactElement {
 
     let stale = false;
 
-    async function getNextNonce(
-      library: Provider,
-      account: string
-    ): Promise<void> {
+    async function getNextNonce(library: Provider, account: string): Promise<void> {
       const nextNonce: number = await library.getTransactionCount(account);
 
       try {
@@ -211,9 +195,7 @@ function NextNonce(): ReactElement {
         if (!stale) {
           setNextNonce(undefined);
 
-          window.alert(
-            'Error!' + (error && error.message ? `\n\n${error.message}` : '')
-          );
+          window.alert('Error!' + (error && error.message ? `\n\n${error.message}` : ''));
         }
       }
     }
@@ -251,9 +233,7 @@ function NextNonce(): ReactElement {
 function StatusIcon(): ReactElement {
   const { active, error } = useWeb3React<Provider>();
 
-  return (
-    <StyledStatusIcon>{active ? '🟢' : error ? '🔴' : '🟠'}</StyledStatusIcon>
-  );
+  return <StyledStatusIcon>{active ? '🟢' : error ? '🔴' : '🟠'}</StyledStatusIcon>;
 }
 
 export function WalletStatus(): ReactElement {

@@ -11,48 +11,35 @@ import type {
   Overrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type {
-  FunctionFragment,
-  Result,
-  EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../../../common";
+  utils
+} from 'ethers';
+import type { FunctionFragment, Result, EventFragment } from '@ethersproject/abi';
+import type { Listener, Provider } from '@ethersproject/providers';
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../../../../common';
 
 export interface IVotesInterface extends utils.Interface {
   functions: {
-    "delegate(address)": FunctionFragment;
-    "delegateBySig(address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
-    "delegates(address)": FunctionFragment;
-    "getPastTotalSupply(uint256)": FunctionFragment;
-    "getPastVotes(address,uint256)": FunctionFragment;
-    "getVotes(address)": FunctionFragment;
+    'delegate(address)': FunctionFragment;
+    'delegateBySig(address,uint256,uint256,uint8,bytes32,bytes32)': FunctionFragment;
+    'delegates(address)': FunctionFragment;
+    'getPastTotalSupply(uint256)': FunctionFragment;
+    'getPastVotes(address,uint256)': FunctionFragment;
+    'getVotes(address)': FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "delegate"
-      | "delegateBySig"
-      | "delegates"
-      | "getPastTotalSupply"
-      | "getPastVotes"
-      | "getVotes"
+      | 'delegate'
+      | 'delegateBySig'
+      | 'delegates'
+      | 'getPastTotalSupply'
+      | 'getPastVotes'
+      | 'getVotes'
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: 'delegate', values: [PromiseOrValue<string>]): string;
   encodeFunctionData(
-    functionFragment: "delegate",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "delegateBySig",
+    functionFragment: 'delegateBySig',
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
@@ -62,46 +49,28 @@ export interface IVotesInterface extends utils.Interface {
       PromiseOrValue<BytesLike>
     ]
   ): string;
+  encodeFunctionData(functionFragment: 'delegates', values: [PromiseOrValue<string>]): string;
+  encodeFunctionData(functionFragment: 'getPastTotalSupply', values: [PromiseOrValue<BigNumberish>]): string;
   encodeFunctionData(
-    functionFragment: "delegates",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getPastTotalSupply",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getPastVotes",
+    functionFragment: 'getPastVotes',
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
-  encodeFunctionData(
-    functionFragment: "getVotes",
-    values: [PromiseOrValue<string>]
-  ): string;
+  encodeFunctionData(functionFragment: 'getVotes', values: [PromiseOrValue<string>]): string;
 
-  decodeFunctionResult(functionFragment: "delegate", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "delegateBySig",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "delegates", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getPastTotalSupply",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getPastVotes",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "getVotes", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'delegate', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'delegateBySig', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'delegates', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getPastTotalSupply', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getPastVotes', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getVotes', data: BytesLike): Result;
 
   events: {
-    "DelegateChanged(address,address,address)": EventFragment;
-    "DelegateVotesChanged(address,uint256,uint256)": EventFragment;
+    'DelegateChanged(address,address,address)': EventFragment;
+    'DelegateVotesChanged(address,uint256,uint256)': EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "DelegateChanged"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "DelegateVotesChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'DelegateChanged'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'DelegateVotesChanged'): EventFragment;
 }
 
 export interface DelegateChangedEventObject {
@@ -109,10 +78,7 @@ export interface DelegateChangedEventObject {
   fromDelegate: string;
   toDelegate: string;
 }
-export type DelegateChangedEvent = TypedEvent<
-  [string, string, string],
-  DelegateChangedEventObject
->;
+export type DelegateChangedEvent = TypedEvent<[string, string, string], DelegateChangedEventObject>;
 
 export type DelegateChangedEventFilter = TypedEventFilter<DelegateChangedEvent>;
 
@@ -121,13 +87,9 @@ export interface DelegateVotesChangedEventObject {
   previousBalance: BigNumber;
   newBalance: BigNumber;
 }
-export type DelegateVotesChangedEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  DelegateVotesChangedEventObject
->;
+export type DelegateVotesChangedEvent = TypedEvent<[string, BigNumber, BigNumber], DelegateVotesChangedEventObject>;
 
-export type DelegateVotesChangedEventFilter =
-  TypedEventFilter<DelegateVotesChangedEvent>;
+export type DelegateVotesChangedEventFilter = TypedEventFilter<DelegateVotesChangedEvent>;
 
 export interface IVotes extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -142,13 +104,9 @@ export interface IVotes extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TEvent>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
   listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this;
   removeAllListeners(eventName?: string): this;
   off: OnEvent<this>;
   on: OnEvent<this>;
@@ -171,15 +129,9 @@ export interface IVotes extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    delegates(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+    delegates(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<[string]>;
 
-    getPastTotalSupply(
-      blockNumber: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    getPastTotalSupply(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     getPastVotes(
       account: PromiseOrValue<string>,
@@ -187,10 +139,7 @@ export interface IVotes extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    getVotes(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    getVotes(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<[BigNumber]>;
   };
 
   delegate(
@@ -208,15 +157,9 @@ export interface IVotes extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  delegates(
-    account: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<string>;
+  delegates(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<string>;
 
-  getPastTotalSupply(
-    blockNumber: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  getPastTotalSupply(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
   getPastVotes(
     account: PromiseOrValue<string>,
@@ -224,16 +167,10 @@ export interface IVotes extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  getVotes(
-    account: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  getVotes(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>;
 
   callStatic: {
-    delegate(
-      delegatee: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    delegate(delegatee: PromiseOrValue<string>, overrides?: CallOverrides): Promise<void>;
 
     delegateBySig(
       delegatee: PromiseOrValue<string>,
@@ -245,15 +182,9 @@ export interface IVotes extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    delegates(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<string>;
+    delegates(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<string>;
 
-    getPastTotalSupply(
-      blockNumber: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getPastTotalSupply(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     getPastVotes(
       account: PromiseOrValue<string>,
@@ -261,14 +192,11 @@ export interface IVotes extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getVotes(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getVotes(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   filters: {
-    "DelegateChanged(address,address,address)"(
+    'DelegateChanged(address,address,address)'(
       delegator?: PromiseOrValue<string> | null,
       fromDelegate?: PromiseOrValue<string> | null,
       toDelegate?: PromiseOrValue<string> | null
@@ -279,7 +207,7 @@ export interface IVotes extends BaseContract {
       toDelegate?: PromiseOrValue<string> | null
     ): DelegateChangedEventFilter;
 
-    "DelegateVotesChanged(address,uint256,uint256)"(
+    'DelegateVotesChanged(address,uint256,uint256)'(
       delegate?: PromiseOrValue<string> | null,
       previousBalance?: null,
       newBalance?: null
@@ -307,15 +235,9 @@ export interface IVotes extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    delegates(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    delegates(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    getPastTotalSupply(
-      blockNumber: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getPastTotalSupply(blockNumber: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
 
     getPastVotes(
       account: PromiseOrValue<string>,
@@ -323,10 +245,7 @@ export interface IVotes extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getVotes(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getVotes(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -345,10 +264,7 @@ export interface IVotes extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    delegates(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    delegates(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getPastTotalSupply(
       blockNumber: PromiseOrValue<BigNumberish>,
@@ -361,9 +277,6 @@ export interface IVotes extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getVotes(
-      account: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    getVotes(account: PromiseOrValue<string>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

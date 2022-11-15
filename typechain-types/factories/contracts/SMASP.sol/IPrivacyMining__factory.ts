@@ -2,104 +2,101 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
-import type {
-  IPrivacyMining,
-  IPrivacyMiningInterface,
-} from "../../../contracts/SMASP.sol/IPrivacyMining";
+import { Contract, Signer, utils } from 'ethers';
+import type { Provider } from '@ethersproject/providers';
+import type { IPrivacyMining, IPrivacyMiningInterface } from '../../../contracts/SMASP.sol/IPrivacyMining';
 
 const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
-        internalType: "uint256",
-        name: "assumedPhase",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assumedPhase',
+        type: 'uint256'
       },
       {
-        internalType: "uint256",
-        name: "correctPhase",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'correctPhase',
+        type: 'uint256'
+      }
     ],
-    name: "InvalidPhase",
-    type: "error",
+    name: 'InvalidPhase',
+    type: 'error'
   },
   {
     inputs: [
       {
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: 'address',
+        name: 'user',
+        type: 'address'
       },
       {
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "depositAssetToPool",
+    name: 'depositAssetToPool',
     outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    stateMutability: 'nonpayable',
+    type: 'function'
   },
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_assetId",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: '_assetId',
+        type: 'uint256'
+      }
     ],
-    name: "getRewardPoolInfo",
+    name: 'getRewardPoolInfo',
     outputs: [
       {
         components: [
           {
-            internalType: "uint8",
-            name: "phase",
-            type: "uint8",
+            internalType: 'uint8',
+            name: 'phase',
+            type: 'uint8'
           },
           {
-            internalType: "uint64",
-            name: "lastRewardTime",
-            type: "uint64",
+            internalType: 'uint64',
+            name: 'lastRewardTime',
+            type: 'uint64'
           },
           {
-            internalType: "uint64",
-            name: "allocPoint",
-            type: "uint64",
+            internalType: 'uint64',
+            name: 'allocPoint',
+            type: 'uint64'
           },
           {
-            internalType: "uint256",
-            name: "accSilentPerShare",
-            type: "uint256",
+            internalType: 'uint256',
+            name: 'accSilentPerShare',
+            type: 'uint256'
           },
           {
-            internalType: "uint256",
-            name: "globalPoolBalance",
-            type: "uint256",
-          },
+            internalType: 'uint256',
+            name: 'globalPoolBalance',
+            type: 'uint256'
+          }
         ],
-        internalType: "struct IPrivacyMining.RewardPool",
-        name: "",
-        type: "tuple",
-      },
+        internalType: 'struct IPrivacyMining.RewardPool',
+        name: '',
+        type: 'tuple'
+      }
     ],
-    stateMutability: "view",
-    type: "function",
-  },
+    stateMutability: 'view',
+    type: 'function'
+  }
 ];
 
 export class IPrivacyMining__factory {
@@ -107,10 +104,7 @@ export class IPrivacyMining__factory {
   static createInterface(): IPrivacyMiningInterface {
     return new utils.Interface(_abi) as IPrivacyMiningInterface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): IPrivacyMining {
+  static connect(address: string, signerOrProvider: Signer | Provider): IPrivacyMining {
     return new Contract(address, _abi, signerOrProvider) as IPrivacyMining;
   }
 }

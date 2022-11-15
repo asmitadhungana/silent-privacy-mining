@@ -11,97 +11,66 @@ import type {
   Overrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type {
-  FunctionFragment,
-  Result,
-  EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../common";
+  utils
+} from 'ethers';
+import type { FunctionFragment, Result, EventFragment } from '@ethersproject/abi';
+import type { Listener, Provider } from '@ethersproject/providers';
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../../common';
 
 export interface IPrivacyMiningInterface extends utils.Interface {
   functions: {
-    "claimRewardsFromPool(uint256)": FunctionFragment;
-    "depositAssetToPool(address,uint256,uint256)": FunctionFragment;
-    "stakeSilentToPool(uint256,uint256)": FunctionFragment;
-    "unstakeSilentFromPool(uint256,uint256)": FunctionFragment;
+    'claimRewardsFromPool(uint256)': FunctionFragment;
+    'depositAssetToPool(address,uint256,uint256)': FunctionFragment;
+    'stakeSilentToPool(uint256,uint256)': FunctionFragment;
+    'unstakeSilentFromPool(uint256,uint256)': FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "claimRewardsFromPool"
-      | "depositAssetToPool"
-      | "stakeSilentToPool"
-      | "unstakeSilentFromPool"
+      | 'claimRewardsFromPool'
+      | 'depositAssetToPool'
+      | 'stakeSilentToPool'
+      | 'unstakeSilentFromPool'
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: 'claimRewardsFromPool', values: [PromiseOrValue<BigNumberish>]): string;
   encodeFunctionData(
-    functionFragment: "claimRewardsFromPool",
-    values: [PromiseOrValue<BigNumberish>]
+    functionFragment: 'depositAssetToPool',
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "depositAssetToPool",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "stakeSilentToPool",
+    functionFragment: 'stakeSilentToPool',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "unstakeSilentFromPool",
+    functionFragment: 'unstakeSilentFromPool',
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "claimRewardsFromPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "depositAssetToPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "stakeSilentToPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "unstakeSilentFromPool",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: 'claimRewardsFromPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'depositAssetToPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'stakeSilentToPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'unstakeSilentFromPool', data: BytesLike): Result;
 
   events: {
-    "LogDepositToPool(address,uint256,uint256)": EventFragment;
-    "LogRewardPaidByPool(uint256,address,uint256)": EventFragment;
-    "LogRewardPoolAdded(uint256,uint256,uint256)": EventFragment;
-    "LogSilentStakedToPool(address,uint256,uint256)": EventFragment;
-    "LogSilentUnstakedFromPool(address,uint256,uint256)": EventFragment;
-    "LogUpdatePoolRewards(uint256,uint256,uint256,uint256)": EventFragment;
-    "LogUpdateRewardEmissionRate(uint256,uint256)": EventFragment;
-    "LogUpdateRewardPool(uint256,uint256)": EventFragment;
+    'LogDepositToPool(address,uint256,uint256)': EventFragment;
+    'LogRewardPaidByPool(uint256,address,uint256)': EventFragment;
+    'LogRewardPoolAdded(uint256,uint256,uint256)': EventFragment;
+    'LogSilentStakedToPool(address,uint256,uint256)': EventFragment;
+    'LogSilentUnstakedFromPool(address,uint256,uint256)': EventFragment;
+    'LogUpdatePoolRewards(uint256,uint256,uint256,uint256)': EventFragment;
+    'LogUpdateRewardEmissionRate(uint256,uint256)': EventFragment;
+    'LogUpdateRewardPool(uint256,uint256)': EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "LogDepositToPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogRewardPaidByPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogRewardPoolAdded"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogSilentStakedToPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogSilentUnstakedFromPool"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogUpdatePoolRewards"): EventFragment;
-  getEvent(
-    nameOrSignatureOrTopic: "LogUpdateRewardEmissionRate"
-  ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogUpdateRewardPool"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogDepositToPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogRewardPaidByPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogRewardPoolAdded'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogSilentStakedToPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogSilentUnstakedFromPool'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogUpdatePoolRewards'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogUpdateRewardEmissionRate'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'LogUpdateRewardPool'): EventFragment;
 }
 
 export interface LogDepositToPoolEventObject {
@@ -109,52 +78,36 @@ export interface LogDepositToPoolEventObject {
   assetId: BigNumber;
   amount: BigNumber;
 }
-export type LogDepositToPoolEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  LogDepositToPoolEventObject
->;
+export type LogDepositToPoolEvent = TypedEvent<[string, BigNumber, BigNumber], LogDepositToPoolEventObject>;
 
-export type LogDepositToPoolEventFilter =
-  TypedEventFilter<LogDepositToPoolEvent>;
+export type LogDepositToPoolEventFilter = TypedEventFilter<LogDepositToPoolEvent>;
 
 export interface LogRewardPaidByPoolEventObject {
   assetId: BigNumber;
   user: string;
   amount: BigNumber;
 }
-export type LogRewardPaidByPoolEvent = TypedEvent<
-  [BigNumber, string, BigNumber],
-  LogRewardPaidByPoolEventObject
->;
+export type LogRewardPaidByPoolEvent = TypedEvent<[BigNumber, string, BigNumber], LogRewardPaidByPoolEventObject>;
 
-export type LogRewardPaidByPoolEventFilter =
-  TypedEventFilter<LogRewardPaidByPoolEvent>;
+export type LogRewardPaidByPoolEventFilter = TypedEventFilter<LogRewardPaidByPoolEvent>;
 
 export interface LogRewardPoolAddedEventObject {
   assetId: BigNumber;
   phase: BigNumber;
   allocPoint: BigNumber;
 }
-export type LogRewardPoolAddedEvent = TypedEvent<
-  [BigNumber, BigNumber, BigNumber],
-  LogRewardPoolAddedEventObject
->;
+export type LogRewardPoolAddedEvent = TypedEvent<[BigNumber, BigNumber, BigNumber], LogRewardPoolAddedEventObject>;
 
-export type LogRewardPoolAddedEventFilter =
-  TypedEventFilter<LogRewardPoolAddedEvent>;
+export type LogRewardPoolAddedEventFilter = TypedEventFilter<LogRewardPoolAddedEvent>;
 
 export interface LogSilentStakedToPoolEventObject {
   user: string;
   assetId: BigNumber;
   amount: BigNumber;
 }
-export type LogSilentStakedToPoolEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  LogSilentStakedToPoolEventObject
->;
+export type LogSilentStakedToPoolEvent = TypedEvent<[string, BigNumber, BigNumber], LogSilentStakedToPoolEventObject>;
 
-export type LogSilentStakedToPoolEventFilter =
-  TypedEventFilter<LogSilentStakedToPoolEvent>;
+export type LogSilentStakedToPoolEventFilter = TypedEventFilter<LogSilentStakedToPoolEvent>;
 
 export interface LogSilentUnstakedFromPoolEventObject {
   user: string;
@@ -166,8 +119,7 @@ export type LogSilentUnstakedFromPoolEvent = TypedEvent<
   LogSilentUnstakedFromPoolEventObject
 >;
 
-export type LogSilentUnstakedFromPoolEventFilter =
-  TypedEventFilter<LogSilentUnstakedFromPoolEvent>;
+export type LogSilentUnstakedFromPoolEventFilter = TypedEventFilter<LogSilentUnstakedFromPoolEvent>;
 
 export interface LogUpdatePoolRewardsEventObject {
   assetId: BigNumber;
@@ -180,8 +132,7 @@ export type LogUpdatePoolRewardsEvent = TypedEvent<
   LogUpdatePoolRewardsEventObject
 >;
 
-export type LogUpdatePoolRewardsEventFilter =
-  TypedEventFilter<LogUpdatePoolRewardsEvent>;
+export type LogUpdatePoolRewardsEventFilter = TypedEventFilter<LogUpdatePoolRewardsEvent>;
 
 export interface LogUpdateRewardEmissionRateEventObject {
   phase: BigNumber;
@@ -192,20 +143,15 @@ export type LogUpdateRewardEmissionRateEvent = TypedEvent<
   LogUpdateRewardEmissionRateEventObject
 >;
 
-export type LogUpdateRewardEmissionRateEventFilter =
-  TypedEventFilter<LogUpdateRewardEmissionRateEvent>;
+export type LogUpdateRewardEmissionRateEventFilter = TypedEventFilter<LogUpdateRewardEmissionRateEvent>;
 
 export interface LogUpdateRewardPoolEventObject {
   assetId: BigNumber;
   allocPoint: BigNumber;
 }
-export type LogUpdateRewardPoolEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  LogUpdateRewardPoolEventObject
->;
+export type LogUpdateRewardPoolEvent = TypedEvent<[BigNumber, BigNumber], LogUpdateRewardPoolEventObject>;
 
-export type LogUpdateRewardPoolEventFilter =
-  TypedEventFilter<LogUpdateRewardPoolEvent>;
+export type LogUpdateRewardPoolEventFilter = TypedEventFilter<LogUpdateRewardPoolEvent>;
 
 export interface IPrivacyMining extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -220,13 +166,9 @@ export interface IPrivacyMining extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TEvent>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
   listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this;
   removeAllListeners(eventName?: string): this;
   off: OnEvent<this>;
   on: OnEvent<this>;
@@ -284,10 +226,7 @@ export interface IPrivacyMining extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    claimRewardsFromPool(
-      _assetId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    claimRewardsFromPool(_assetId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<void>;
 
     depositAssetToPool(
       user: PromiseOrValue<string>,
@@ -310,18 +249,14 @@ export interface IPrivacyMining extends BaseContract {
   };
 
   filters: {
-    "LogDepositToPool(address,uint256,uint256)"(
+    'LogDepositToPool(address,uint256,uint256)'(
       user?: null,
       assetId?: null,
       amount?: null
     ): LogDepositToPoolEventFilter;
-    LogDepositToPool(
-      user?: null,
-      assetId?: null,
-      amount?: null
-    ): LogDepositToPoolEventFilter;
+    LogDepositToPool(user?: null, assetId?: null, amount?: null): LogDepositToPoolEventFilter;
 
-    "LogRewardPaidByPool(uint256,address,uint256)"(
+    'LogRewardPaidByPool(uint256,address,uint256)'(
       assetId?: null,
       user?: null,
       amount?: PromiseOrValue<BigNumberish> | null
@@ -332,40 +267,28 @@ export interface IPrivacyMining extends BaseContract {
       amount?: PromiseOrValue<BigNumberish> | null
     ): LogRewardPaidByPoolEventFilter;
 
-    "LogRewardPoolAdded(uint256,uint256,uint256)"(
+    'LogRewardPoolAdded(uint256,uint256,uint256)'(
       assetId?: null,
       phase?: null,
       allocPoint?: null
     ): LogRewardPoolAddedEventFilter;
-    LogRewardPoolAdded(
-      assetId?: null,
-      phase?: null,
-      allocPoint?: null
-    ): LogRewardPoolAddedEventFilter;
+    LogRewardPoolAdded(assetId?: null, phase?: null, allocPoint?: null): LogRewardPoolAddedEventFilter;
 
-    "LogSilentStakedToPool(address,uint256,uint256)"(
+    'LogSilentStakedToPool(address,uint256,uint256)'(
       user?: null,
       assetId?: null,
       amount?: null
     ): LogSilentStakedToPoolEventFilter;
-    LogSilentStakedToPool(
-      user?: null,
-      assetId?: null,
-      amount?: null
-    ): LogSilentStakedToPoolEventFilter;
+    LogSilentStakedToPool(user?: null, assetId?: null, amount?: null): LogSilentStakedToPoolEventFilter;
 
-    "LogSilentUnstakedFromPool(address,uint256,uint256)"(
+    'LogSilentUnstakedFromPool(address,uint256,uint256)'(
       user?: null,
       assetId?: null,
       amount?: null
     ): LogSilentUnstakedFromPoolEventFilter;
-    LogSilentUnstakedFromPool(
-      user?: null,
-      assetId?: null,
-      amount?: null
-    ): LogSilentUnstakedFromPoolEventFilter;
+    LogSilentUnstakedFromPool(user?: null, assetId?: null, amount?: null): LogSilentUnstakedFromPoolEventFilter;
 
-    "LogUpdatePoolRewards(uint256,uint256,uint256,uint256)"(
+    'LogUpdatePoolRewards(uint256,uint256,uint256,uint256)'(
       assetId?: null,
       lastRewardTime?: null,
       globalPoolBalance?: null,
@@ -378,23 +301,14 @@ export interface IPrivacyMining extends BaseContract {
       accRewardPerShare?: null
     ): LogUpdatePoolRewardsEventFilter;
 
-    "LogUpdateRewardEmissionRate(uint256,uint256)"(
+    'LogUpdateRewardEmissionRate(uint256,uint256)'(
       phase?: null,
       rewardPerSecond?: null
     ): LogUpdateRewardEmissionRateEventFilter;
-    LogUpdateRewardEmissionRate(
-      phase?: null,
-      rewardPerSecond?: null
-    ): LogUpdateRewardEmissionRateEventFilter;
+    LogUpdateRewardEmissionRate(phase?: null, rewardPerSecond?: null): LogUpdateRewardEmissionRateEventFilter;
 
-    "LogUpdateRewardPool(uint256,uint256)"(
-      assetId?: null,
-      allocPoint?: null
-    ): LogUpdateRewardPoolEventFilter;
-    LogUpdateRewardPool(
-      assetId?: null,
-      allocPoint?: null
-    ): LogUpdateRewardPoolEventFilter;
+    'LogUpdateRewardPool(uint256,uint256)'(assetId?: null, allocPoint?: null): LogUpdateRewardPoolEventFilter;
+    LogUpdateRewardPool(assetId?: null, allocPoint?: null): LogUpdateRewardPoolEventFilter;
   };
 
   estimateGas: {

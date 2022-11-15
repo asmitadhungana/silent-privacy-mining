@@ -11,17 +11,11 @@ import type {
   Overrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../common";
+  utils
+} from 'ethers';
+import type { FunctionFragment, Result } from '@ethersproject/abi';
+import type { Listener, Provider } from '@ethersproject/providers';
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../../common';
 
 export declare namespace IPrivacyMining {
   export type RewardPoolStruct = {
@@ -32,13 +26,7 @@ export declare namespace IPrivacyMining {
     globalPoolBalance: PromiseOrValue<BigNumberish>;
   };
 
-  export type RewardPoolStructOutput = [
-    number,
-    BigNumber,
-    BigNumber,
-    BigNumber,
-    BigNumber
-  ] & {
+  export type RewardPoolStructOutput = [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
     phase: number;
     lastRewardTime: BigNumber;
     allocPoint: BigNumber;
@@ -49,35 +37,20 @@ export declare namespace IPrivacyMining {
 
 export interface IPrivacyMiningInterface extends utils.Interface {
   functions: {
-    "depositAssetToPool(address,uint256,uint256)": FunctionFragment;
-    "getRewardPoolInfo(uint256)": FunctionFragment;
+    'depositAssetToPool(address,uint256,uint256)': FunctionFragment;
+    'getRewardPoolInfo(uint256)': FunctionFragment;
   };
 
-  getFunction(
-    nameOrSignatureOrTopic: "depositAssetToPool" | "getRewardPoolInfo"
-  ): FunctionFragment;
+  getFunction(nameOrSignatureOrTopic: 'depositAssetToPool' | 'getRewardPoolInfo'): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "depositAssetToPool",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
+    functionFragment: 'depositAssetToPool',
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
-  encodeFunctionData(
-    functionFragment: "getRewardPoolInfo",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
+  encodeFunctionData(functionFragment: 'getRewardPoolInfo', values: [PromiseOrValue<BigNumberish>]): string;
 
-  decodeFunctionResult(
-    functionFragment: "depositAssetToPool",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getRewardPoolInfo",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: 'depositAssetToPool', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getRewardPoolInfo', data: BytesLike): Result;
 
   events: {};
 }
@@ -95,13 +68,9 @@ export interface IPrivacyMining extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TEvent>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
   listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this;
   removeAllListeners(eventName?: string): this;
   off: OnEvent<this>;
   on: OnEvent<this>;
@@ -158,10 +127,7 @@ export interface IPrivacyMining extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    getRewardPoolInfo(
-      _assetId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getRewardPoolInfo(_assetId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -172,9 +138,6 @@ export interface IPrivacyMining extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    getRewardPoolInfo(
-      _assetId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    getRewardPoolInfo(_assetId: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

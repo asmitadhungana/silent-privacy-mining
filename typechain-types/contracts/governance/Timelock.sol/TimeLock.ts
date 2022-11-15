@@ -12,112 +12,84 @@ import type {
   PayableOverrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type {
-  FunctionFragment,
-  Result,
-  EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../../../common";
+  utils
+} from 'ethers';
+import type { FunctionFragment, Result, EventFragment } from '@ethersproject/abi';
+import type { Listener, Provider } from '@ethersproject/providers';
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../../../common';
 
 export interface TimeLockInterface extends utils.Interface {
   functions: {
-    "CANCELLER_ROLE()": FunctionFragment;
-    "DEFAULT_ADMIN_ROLE()": FunctionFragment;
-    "EXECUTOR_ROLE()": FunctionFragment;
-    "PROPOSER_ROLE()": FunctionFragment;
-    "TIMELOCK_ADMIN_ROLE()": FunctionFragment;
-    "cancel(bytes32)": FunctionFragment;
-    "execute(address,uint256,bytes,bytes32,bytes32)": FunctionFragment;
-    "executeBatch(address[],uint256[],bytes[],bytes32,bytes32)": FunctionFragment;
-    "getMinDelay()": FunctionFragment;
-    "getRoleAdmin(bytes32)": FunctionFragment;
-    "getTimestamp(bytes32)": FunctionFragment;
-    "grantRole(bytes32,address)": FunctionFragment;
-    "hasRole(bytes32,address)": FunctionFragment;
-    "hashOperation(address,uint256,bytes,bytes32,bytes32)": FunctionFragment;
-    "hashOperationBatch(address[],uint256[],bytes[],bytes32,bytes32)": FunctionFragment;
-    "isOperation(bytes32)": FunctionFragment;
-    "isOperationDone(bytes32)": FunctionFragment;
-    "isOperationPending(bytes32)": FunctionFragment;
-    "isOperationReady(bytes32)": FunctionFragment;
-    "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)": FunctionFragment;
-    "onERC1155Received(address,address,uint256,uint256,bytes)": FunctionFragment;
-    "onERC721Received(address,address,uint256,bytes)": FunctionFragment;
-    "renounceRole(bytes32,address)": FunctionFragment;
-    "revokeRole(bytes32,address)": FunctionFragment;
-    "schedule(address,uint256,bytes,bytes32,bytes32,uint256)": FunctionFragment;
-    "scheduleBatch(address[],uint256[],bytes[],bytes32,bytes32,uint256)": FunctionFragment;
-    "supportsInterface(bytes4)": FunctionFragment;
-    "updateDelay(uint256)": FunctionFragment;
+    'CANCELLER_ROLE()': FunctionFragment;
+    'DEFAULT_ADMIN_ROLE()': FunctionFragment;
+    'EXECUTOR_ROLE()': FunctionFragment;
+    'PROPOSER_ROLE()': FunctionFragment;
+    'TIMELOCK_ADMIN_ROLE()': FunctionFragment;
+    'cancel(bytes32)': FunctionFragment;
+    'execute(address,uint256,bytes,bytes32,bytes32)': FunctionFragment;
+    'executeBatch(address[],uint256[],bytes[],bytes32,bytes32)': FunctionFragment;
+    'getMinDelay()': FunctionFragment;
+    'getRoleAdmin(bytes32)': FunctionFragment;
+    'getTimestamp(bytes32)': FunctionFragment;
+    'grantRole(bytes32,address)': FunctionFragment;
+    'hasRole(bytes32,address)': FunctionFragment;
+    'hashOperation(address,uint256,bytes,bytes32,bytes32)': FunctionFragment;
+    'hashOperationBatch(address[],uint256[],bytes[],bytes32,bytes32)': FunctionFragment;
+    'isOperation(bytes32)': FunctionFragment;
+    'isOperationDone(bytes32)': FunctionFragment;
+    'isOperationPending(bytes32)': FunctionFragment;
+    'isOperationReady(bytes32)': FunctionFragment;
+    'onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)': FunctionFragment;
+    'onERC1155Received(address,address,uint256,uint256,bytes)': FunctionFragment;
+    'onERC721Received(address,address,uint256,bytes)': FunctionFragment;
+    'renounceRole(bytes32,address)': FunctionFragment;
+    'revokeRole(bytes32,address)': FunctionFragment;
+    'schedule(address,uint256,bytes,bytes32,bytes32,uint256)': FunctionFragment;
+    'scheduleBatch(address[],uint256[],bytes[],bytes32,bytes32,uint256)': FunctionFragment;
+    'supportsInterface(bytes4)': FunctionFragment;
+    'updateDelay(uint256)': FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "CANCELLER_ROLE"
-      | "DEFAULT_ADMIN_ROLE"
-      | "EXECUTOR_ROLE"
-      | "PROPOSER_ROLE"
-      | "TIMELOCK_ADMIN_ROLE"
-      | "cancel"
-      | "execute"
-      | "executeBatch"
-      | "getMinDelay"
-      | "getRoleAdmin"
-      | "getTimestamp"
-      | "grantRole"
-      | "hasRole"
-      | "hashOperation"
-      | "hashOperationBatch"
-      | "isOperation"
-      | "isOperationDone"
-      | "isOperationPending"
-      | "isOperationReady"
-      | "onERC1155BatchReceived"
-      | "onERC1155Received"
-      | "onERC721Received"
-      | "renounceRole"
-      | "revokeRole"
-      | "schedule"
-      | "scheduleBatch"
-      | "supportsInterface"
-      | "updateDelay"
+      | 'CANCELLER_ROLE'
+      | 'DEFAULT_ADMIN_ROLE'
+      | 'EXECUTOR_ROLE'
+      | 'PROPOSER_ROLE'
+      | 'TIMELOCK_ADMIN_ROLE'
+      | 'cancel'
+      | 'execute'
+      | 'executeBatch'
+      | 'getMinDelay'
+      | 'getRoleAdmin'
+      | 'getTimestamp'
+      | 'grantRole'
+      | 'hasRole'
+      | 'hashOperation'
+      | 'hashOperationBatch'
+      | 'isOperation'
+      | 'isOperationDone'
+      | 'isOperationPending'
+      | 'isOperationReady'
+      | 'onERC1155BatchReceived'
+      | 'onERC1155Received'
+      | 'onERC721Received'
+      | 'renounceRole'
+      | 'revokeRole'
+      | 'schedule'
+      | 'scheduleBatch'
+      | 'supportsInterface'
+      | 'updateDelay'
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: 'CANCELLER_ROLE', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'DEFAULT_ADMIN_ROLE', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'EXECUTOR_ROLE', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'PROPOSER_ROLE', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'TIMELOCK_ADMIN_ROLE', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'cancel', values: [PromiseOrValue<BytesLike>]): string;
   encodeFunctionData(
-    functionFragment: "CANCELLER_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "DEFAULT_ADMIN_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "EXECUTOR_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "PROPOSER_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "TIMELOCK_ADMIN_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "cancel",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "execute",
+    functionFragment: 'execute',
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
@@ -127,7 +99,7 @@ export interface TimeLockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "executeBatch",
+    functionFragment: 'executeBatch',
     values: [
       PromiseOrValue<string>[],
       PromiseOrValue<BigNumberish>[],
@@ -136,28 +108,16 @@ export interface TimeLockInterface extends utils.Interface {
       PromiseOrValue<BytesLike>
     ]
   ): string;
+  encodeFunctionData(functionFragment: 'getMinDelay', values?: undefined): string;
+  encodeFunctionData(functionFragment: 'getRoleAdmin', values: [PromiseOrValue<BytesLike>]): string;
+  encodeFunctionData(functionFragment: 'getTimestamp', values: [PromiseOrValue<BytesLike>]): string;
   encodeFunctionData(
-    functionFragment: "getMinDelay",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getRoleAdmin",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getTimestamp",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "grantRole",
+    functionFragment: 'grantRole',
     values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]
   ): string;
+  encodeFunctionData(functionFragment: 'hasRole', values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]): string;
   encodeFunctionData(
-    functionFragment: "hasRole",
-    values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "hashOperation",
+    functionFragment: 'hashOperation',
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
@@ -167,7 +127,7 @@ export interface TimeLockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "hashOperationBatch",
+    functionFragment: 'hashOperationBatch',
     values: [
       PromiseOrValue<string>[],
       PromiseOrValue<BigNumberish>[],
@@ -176,24 +136,12 @@ export interface TimeLockInterface extends utils.Interface {
       PromiseOrValue<BytesLike>
     ]
   ): string;
+  encodeFunctionData(functionFragment: 'isOperation', values: [PromiseOrValue<BytesLike>]): string;
+  encodeFunctionData(functionFragment: 'isOperationDone', values: [PromiseOrValue<BytesLike>]): string;
+  encodeFunctionData(functionFragment: 'isOperationPending', values: [PromiseOrValue<BytesLike>]): string;
+  encodeFunctionData(functionFragment: 'isOperationReady', values: [PromiseOrValue<BytesLike>]): string;
   encodeFunctionData(
-    functionFragment: "isOperation",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isOperationDone",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isOperationPending",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isOperationReady",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "onERC1155BatchReceived",
+    functionFragment: 'onERC1155BatchReceived',
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<string>,
@@ -203,7 +151,7 @@ export interface TimeLockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "onERC1155Received",
+    functionFragment: 'onERC1155Received',
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<string>,
@@ -213,24 +161,19 @@ export interface TimeLockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "onERC721Received",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BytesLike>
-    ]
+    functionFragment: 'onERC721Received',
+    values: [PromiseOrValue<string>, PromiseOrValue<string>, PromiseOrValue<BigNumberish>, PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
-    functionFragment: "renounceRole",
+    functionFragment: 'renounceRole',
     values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "revokeRole",
+    functionFragment: 'revokeRole',
     values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "schedule",
+    functionFragment: 'schedule',
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
@@ -241,7 +184,7 @@ export interface TimeLockInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "scheduleBatch",
+    functionFragment: 'scheduleBatch',
     values: [
       PromiseOrValue<string>[],
       PromiseOrValue<BigNumberish>[],
@@ -251,127 +194,55 @@ export interface TimeLockInterface extends utils.Interface {
       PromiseOrValue<BigNumberish>
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "supportsInterface",
-    values: [PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "updateDelay",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
+  encodeFunctionData(functionFragment: 'supportsInterface', values: [PromiseOrValue<BytesLike>]): string;
+  encodeFunctionData(functionFragment: 'updateDelay', values: [PromiseOrValue<BigNumberish>]): string;
 
-  decodeFunctionResult(
-    functionFragment: "CANCELLER_ROLE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "DEFAULT_ADMIN_ROLE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "EXECUTOR_ROLE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "PROPOSER_ROLE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "TIMELOCK_ADMIN_ROLE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "cancel", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "execute", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "executeBatch",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getMinDelay",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getRoleAdmin",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTimestamp",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "hashOperation",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "hashOperationBatch",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isOperation",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isOperationDone",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isOperationPending",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isOperationReady",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "onERC1155BatchReceived",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "onERC1155Received",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "onERC721Received",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "renounceRole",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "schedule", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "scheduleBatch",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "supportsInterface",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "updateDelay",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: 'CANCELLER_ROLE', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'DEFAULT_ADMIN_ROLE', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'EXECUTOR_ROLE', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'PROPOSER_ROLE', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'TIMELOCK_ADMIN_ROLE', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'cancel', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'execute', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'executeBatch', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getMinDelay', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getRoleAdmin', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'getTimestamp', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'grantRole', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'hasRole', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'hashOperation', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'hashOperationBatch', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'isOperation', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'isOperationDone', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'isOperationPending', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'isOperationReady', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'onERC1155BatchReceived', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'onERC1155Received', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'onERC721Received', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'renounceRole', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'revokeRole', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'schedule', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'scheduleBatch', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'supportsInterface', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: 'updateDelay', data: BytesLike): Result;
 
   events: {
-    "CallExecuted(bytes32,uint256,address,uint256,bytes)": EventFragment;
-    "CallScheduled(bytes32,uint256,address,uint256,bytes,bytes32,uint256)": EventFragment;
-    "Cancelled(bytes32)": EventFragment;
-    "MinDelayChange(uint256,uint256)": EventFragment;
-    "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
-    "RoleGranted(bytes32,address,address)": EventFragment;
-    "RoleRevoked(bytes32,address,address)": EventFragment;
+    'CallExecuted(bytes32,uint256,address,uint256,bytes)': EventFragment;
+    'CallScheduled(bytes32,uint256,address,uint256,bytes,bytes32,uint256)': EventFragment;
+    'Cancelled(bytes32)': EventFragment;
+    'MinDelayChange(uint256,uint256)': EventFragment;
+    'RoleAdminChanged(bytes32,bytes32,bytes32)': EventFragment;
+    'RoleGranted(bytes32,address,address)': EventFragment;
+    'RoleRevoked(bytes32,address,address)': EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "CallExecuted"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "CallScheduled"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Cancelled"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "MinDelayChange"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'CallExecuted'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'CallScheduled'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'Cancelled'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'MinDelayChange'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'RoleAdminChanged'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'RoleGranted'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'RoleRevoked'): EventFragment;
 }
 
 export interface CallExecutedEventObject {
@@ -381,10 +252,7 @@ export interface CallExecutedEventObject {
   value: BigNumber;
   data: string;
 }
-export type CallExecutedEvent = TypedEvent<
-  [string, BigNumber, string, BigNumber, string],
-  CallExecutedEventObject
->;
+export type CallExecutedEvent = TypedEvent<[string, BigNumber, string, BigNumber, string], CallExecutedEventObject>;
 
 export type CallExecutedEventFilter = TypedEventFilter<CallExecutedEvent>;
 
@@ -415,10 +283,7 @@ export interface MinDelayChangeEventObject {
   oldDuration: BigNumber;
   newDuration: BigNumber;
 }
-export type MinDelayChangeEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  MinDelayChangeEventObject
->;
+export type MinDelayChangeEvent = TypedEvent<[BigNumber, BigNumber], MinDelayChangeEventObject>;
 
 export type MinDelayChangeEventFilter = TypedEventFilter<MinDelayChangeEvent>;
 
@@ -427,23 +292,16 @@ export interface RoleAdminChangedEventObject {
   previousAdminRole: string;
   newAdminRole: string;
 }
-export type RoleAdminChangedEvent = TypedEvent<
-  [string, string, string],
-  RoleAdminChangedEventObject
->;
+export type RoleAdminChangedEvent = TypedEvent<[string, string, string], RoleAdminChangedEventObject>;
 
-export type RoleAdminChangedEventFilter =
-  TypedEventFilter<RoleAdminChangedEvent>;
+export type RoleAdminChangedEventFilter = TypedEventFilter<RoleAdminChangedEvent>;
 
 export interface RoleGrantedEventObject {
   role: string;
   account: string;
   sender: string;
 }
-export type RoleGrantedEvent = TypedEvent<
-  [string, string, string],
-  RoleGrantedEventObject
->;
+export type RoleGrantedEvent = TypedEvent<[string, string, string], RoleGrantedEventObject>;
 
 export type RoleGrantedEventFilter = TypedEventFilter<RoleGrantedEvent>;
 
@@ -452,10 +310,7 @@ export interface RoleRevokedEventObject {
   account: string;
   sender: string;
 }
-export type RoleRevokedEvent = TypedEvent<
-  [string, string, string],
-  RoleRevokedEventObject
->;
+export type RoleRevokedEvent = TypedEvent<[string, string, string], RoleRevokedEventObject>;
 
 export type RoleRevokedEventFilter = TypedEventFilter<RoleRevokedEvent>;
 
@@ -472,13 +327,9 @@ export interface TimeLock extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TEvent>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
   listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this;
   removeAllListeners(eventName?: string): this;
   off: OnEvent<this>;
   on: OnEvent<this>;
@@ -519,14 +370,9 @@ export interface TimeLock extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    getMinDelay(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { duration: BigNumber }>;
+    getMinDelay(overrides?: CallOverrides): Promise<[BigNumber] & { duration: BigNumber }>;
 
-    getRoleAdmin(
-      role: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+    getRoleAdmin(role: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<[string]>;
 
     getTimestamp(
       id: PromiseOrValue<BytesLike>,
@@ -563,25 +409,16 @@ export interface TimeLock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string] & { hash: string }>;
 
-    isOperation(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[boolean] & { registered: boolean }>;
+    isOperation(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<[boolean] & { registered: boolean }>;
 
-    isOperationDone(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[boolean] & { done: boolean }>;
+    isOperationDone(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<[boolean] & { done: boolean }>;
 
     isOperationPending(
       id: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<[boolean] & { pending: boolean }>;
 
-    isOperationReady(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[boolean] & { ready: boolean }>;
+    isOperationReady(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<[boolean] & { ready: boolean }>;
 
     onERC1155BatchReceived(
       arg0: PromiseOrValue<string>,
@@ -641,10 +478,7 @@ export interface TimeLock extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<[boolean]>;
 
     updateDelay(
       newDelay: PromiseOrValue<BigNumberish>,
@@ -687,15 +521,9 @@ export interface TimeLock extends BaseContract {
 
   getMinDelay(overrides?: CallOverrides): Promise<BigNumber>;
 
-  getRoleAdmin(
-    role: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<string>;
+  getRoleAdmin(role: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<string>;
 
-  getTimestamp(
-    id: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  getTimestamp(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
   grantRole(
     role: PromiseOrValue<BytesLike>,
@@ -727,25 +555,13 @@ export interface TimeLock extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  isOperation(
-    id: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  isOperation(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
-  isOperationDone(
-    id: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  isOperationDone(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
-  isOperationPending(
-    id: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  isOperationPending(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
-  isOperationReady(
-    id: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  isOperationReady(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
   onERC1155BatchReceived(
     arg0: PromiseOrValue<string>,
@@ -805,10 +621,7 @@ export interface TimeLock extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  supportsInterface(
-    interfaceId: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
   updateDelay(
     newDelay: PromiseOrValue<BigNumberish>,
@@ -826,10 +639,7 @@ export interface TimeLock extends BaseContract {
 
     TIMELOCK_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
-    cancel(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    cancel(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<void>;
 
     execute(
       target: PromiseOrValue<string>,
@@ -851,15 +661,9 @@ export interface TimeLock extends BaseContract {
 
     getMinDelay(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getRoleAdmin(
-      role: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<string>;
+    getRoleAdmin(role: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<string>;
 
-    getTimestamp(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getTimestamp(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
     grantRole(
       role: PromiseOrValue<BytesLike>,
@@ -891,25 +695,13 @@ export interface TimeLock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    isOperation(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    isOperation(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
-    isOperationDone(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    isOperationDone(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
-    isOperationPending(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    isOperationPending(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
-    isOperationReady(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    isOperationReady(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
     onERC1155BatchReceived(
       arg0: PromiseOrValue<string>,
@@ -969,19 +761,13 @@ export interface TimeLock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<boolean>;
 
-    updateDelay(
-      newDelay: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    updateDelay(newDelay: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
-    "CallExecuted(bytes32,uint256,address,uint256,bytes)"(
+    'CallExecuted(bytes32,uint256,address,uint256,bytes)'(
       id?: PromiseOrValue<BytesLike> | null,
       index?: PromiseOrValue<BigNumberish> | null,
       target?: null,
@@ -996,7 +782,7 @@ export interface TimeLock extends BaseContract {
       data?: null
     ): CallExecutedEventFilter;
 
-    "CallScheduled(bytes32,uint256,address,uint256,bytes,bytes32,uint256)"(
+    'CallScheduled(bytes32,uint256,address,uint256,bytes,bytes32,uint256)'(
       id?: PromiseOrValue<BytesLike> | null,
       index?: PromiseOrValue<BigNumberish> | null,
       target?: null,
@@ -1015,21 +801,13 @@ export interface TimeLock extends BaseContract {
       delay?: null
     ): CallScheduledEventFilter;
 
-    "Cancelled(bytes32)"(
-      id?: PromiseOrValue<BytesLike> | null
-    ): CancelledEventFilter;
+    'Cancelled(bytes32)'(id?: PromiseOrValue<BytesLike> | null): CancelledEventFilter;
     Cancelled(id?: PromiseOrValue<BytesLike> | null): CancelledEventFilter;
 
-    "MinDelayChange(uint256,uint256)"(
-      oldDuration?: null,
-      newDuration?: null
-    ): MinDelayChangeEventFilter;
-    MinDelayChange(
-      oldDuration?: null,
-      newDuration?: null
-    ): MinDelayChangeEventFilter;
+    'MinDelayChange(uint256,uint256)'(oldDuration?: null, newDuration?: null): MinDelayChangeEventFilter;
+    MinDelayChange(oldDuration?: null, newDuration?: null): MinDelayChangeEventFilter;
 
-    "RoleAdminChanged(bytes32,bytes32,bytes32)"(
+    'RoleAdminChanged(bytes32,bytes32,bytes32)'(
       role?: PromiseOrValue<BytesLike> | null,
       previousAdminRole?: PromiseOrValue<BytesLike> | null,
       newAdminRole?: PromiseOrValue<BytesLike> | null
@@ -1040,7 +818,7 @@ export interface TimeLock extends BaseContract {
       newAdminRole?: PromiseOrValue<BytesLike> | null
     ): RoleAdminChangedEventFilter;
 
-    "RoleGranted(bytes32,address,address)"(
+    'RoleGranted(bytes32,address,address)'(
       role?: PromiseOrValue<BytesLike> | null,
       account?: PromiseOrValue<string> | null,
       sender?: PromiseOrValue<string> | null
@@ -1051,7 +829,7 @@ export interface TimeLock extends BaseContract {
       sender?: PromiseOrValue<string> | null
     ): RoleGrantedEventFilter;
 
-    "RoleRevoked(bytes32,address,address)"(
+    'RoleRevoked(bytes32,address,address)'(
       role?: PromiseOrValue<BytesLike> | null,
       account?: PromiseOrValue<string> | null,
       sender?: PromiseOrValue<string> | null
@@ -1099,15 +877,9 @@ export interface TimeLock extends BaseContract {
 
     getMinDelay(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getRoleAdmin(
-      role: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getRoleAdmin(role: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    getTimestamp(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getTimestamp(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
     grantRole(
       role: PromiseOrValue<BytesLike>,
@@ -1139,25 +911,13 @@ export interface TimeLock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    isOperation(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    isOperation(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    isOperationDone(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    isOperationDone(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    isOperationPending(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    isOperationPending(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
-    isOperationReady(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    isOperationReady(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
     onERC1155BatchReceived(
       arg0: PromiseOrValue<string>,
@@ -1217,10 +977,7 @@ export interface TimeLock extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<BigNumber>;
 
     updateDelay(
       newDelay: PromiseOrValue<BigNumberish>,
@@ -1231,17 +988,13 @@ export interface TimeLock extends BaseContract {
   populateTransaction: {
     CANCELLER_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    DEFAULT_ADMIN_ROLE(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     EXECUTOR_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     PROPOSER_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    TIMELOCK_ADMIN_ROLE(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    TIMELOCK_ADMIN_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     cancel(
       id: PromiseOrValue<BytesLike>,
@@ -1268,15 +1021,9 @@ export interface TimeLock extends BaseContract {
 
     getMinDelay(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getRoleAdmin(
-      role: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    getRoleAdmin(role: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getTimestamp(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    getTimestamp(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     grantRole(
       role: PromiseOrValue<BytesLike>,
@@ -1308,25 +1055,13 @@ export interface TimeLock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    isOperation(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    isOperation(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    isOperationDone(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    isOperationDone(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    isOperationPending(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    isOperationPending(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    isOperationReady(
-      id: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    isOperationReady(id: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     onERC1155BatchReceived(
       arg0: PromiseOrValue<string>,
@@ -1386,10 +1121,7 @@ export interface TimeLock extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    supportsInterface(
-      interfaceId: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    supportsInterface(interfaceId: PromiseOrValue<BytesLike>, overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     updateDelay(
       newDelay: PromiseOrValue<BigNumberish>,

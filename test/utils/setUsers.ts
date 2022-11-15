@@ -1,9 +1,10 @@
 import { Contract } from 'ethers';
 import { ethers } from 'hardhat';
 
-export async function setupUsers<
-  T extends { [contractName: string]: Contract }
->(addresses: string[], contracts: T): Promise<({ address: string } & T)[]> {
+export async function setupUsers<T extends { [contractName: string]: Contract }>(
+  addresses: string[],
+  contracts: T
+): Promise<({ address: string } & T)[]> {
   const users: ({ address: string } & T)[] = [];
   for (const address of addresses) {
     users.push(await setupUser(address, contracts));

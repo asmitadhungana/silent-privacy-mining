@@ -2,33 +2,30 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
-import type {
-  ISMASP,
-  ISMASPInterface,
-} from "../../../contracts/PrivacyMining.sol/ISMASP";
+import { Contract, Signer, utils } from 'ethers';
+import type { Provider } from '@ethersproject/providers';
+import type { ISMASP, ISMASPInterface } from '../../../contracts/PrivacyMining.sol/ISMASP';
 
 const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256'
+      }
     ],
-    name: "assetIdToToken",
+    name: 'assetIdToToken',
     outputs: [
       {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
+        internalType: 'address',
+        name: '',
+        type: 'address'
+      }
     ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
+    stateMutability: 'nonpayable',
+    type: 'function'
+  }
 ];
 
 export class ISMASP__factory {

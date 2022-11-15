@@ -2,12 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
-import type {
-  IPrivacyMining,
-  IPrivacyMiningInterface,
-} from "../../../contracts/interfaces/IPrivacyMining";
+import { Contract, Signer, utils } from 'ethers';
+import type { Provider } from '@ethersproject/providers';
+import type { IPrivacyMining, IPrivacyMiningInterface } from '../../../contracts/interfaces/IPrivacyMining';
 
 const _abi = [
   {
@@ -15,267 +12,267 @@ const _abi = [
     inputs: [
       {
         indexed: false,
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: 'address',
+        name: 'user',
+        type: 'address'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "LogDepositToPool",
-    type: "event",
+    name: 'LogDepositToPool',
+    type: 'event'
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: 'address',
+        name: 'user',
+        type: 'address'
       },
       {
         indexed: true,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "LogRewardPaidByPool",
-    type: "event",
+    name: 'LogRewardPaidByPool',
+    type: 'event'
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "phase",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'phase',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "allocPoint",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'allocPoint',
+        type: 'uint256'
+      }
     ],
-    name: "LogRewardPoolAdded",
-    type: "event",
+    name: 'LogRewardPoolAdded',
+    type: 'event'
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: false,
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: 'address',
+        name: 'user',
+        type: 'address'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "LogSilentStakedToPool",
-    type: "event",
+    name: 'LogSilentStakedToPool',
+    type: 'event'
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: false,
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: 'address',
+        name: 'user',
+        type: 'address'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "LogSilentUnstakedFromPool",
-    type: "event",
+    name: 'LogSilentUnstakedFromPool',
+    type: 'event'
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "lastRewardTime",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'lastRewardTime',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "globalPoolBalance",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'globalPoolBalance',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "accRewardPerShare",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'accRewardPerShare',
+        type: 'uint256'
+      }
     ],
-    name: "LogUpdatePoolRewards",
-    type: "event",
+    name: 'LogUpdatePoolRewards',
+    type: 'event'
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
-        name: "phase",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'phase',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "rewardPerSecond",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'rewardPerSecond',
+        type: 'uint256'
+      }
     ],
-    name: "LogUpdateRewardEmissionRate",
-    type: "event",
+    name: 'LogUpdateRewardEmissionRate',
+    type: 'event'
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: false,
-        internalType: "uint256",
-        name: "assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: 'assetId',
+        type: 'uint256'
       },
       {
         indexed: false,
-        internalType: "uint256",
-        name: "allocPoint",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'allocPoint',
+        type: 'uint256'
+      }
     ],
-    name: "LogUpdateRewardPool",
-    type: "event",
+    name: 'LogUpdateRewardPool',
+    type: 'event'
   },
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_assetId",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: '_assetId',
+        type: 'uint256'
+      }
     ],
-    name: "claimRewardsFromPool",
+    name: 'claimRewardsFromPool',
     outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    stateMutability: 'nonpayable',
+    type: 'function'
   },
   {
     inputs: [
       {
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: 'address',
+        name: 'user',
+        type: 'address'
       },
       {
-        internalType: "uint256",
-        name: "_assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: '_assetId',
+        type: 'uint256'
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "depositAssetToPool",
+    name: 'depositAssetToPool',
     outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    stateMutability: 'nonpayable',
+    type: 'function'
   },
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: '_assetId',
+        type: 'uint256'
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "stakeSilentToPool",
+    name: 'stakeSilentToPool',
     outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    stateMutability: 'nonpayable',
+    type: 'function'
   },
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_assetId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: '_assetId',
+        type: 'uint256'
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256'
+      }
     ],
-    name: "unstakeSilentFromPool",
+    name: 'unstakeSilentFromPool',
     outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
+    stateMutability: 'nonpayable',
+    type: 'function'
+  }
 ];
 
 export class IPrivacyMining__factory {
@@ -283,10 +280,7 @@ export class IPrivacyMining__factory {
   static createInterface(): IPrivacyMiningInterface {
     return new utils.Interface(_abi) as IPrivacyMiningInterface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): IPrivacyMining {
+  static connect(address: string, signerOrProvider: Signer | Provider): IPrivacyMining {
     return new Contract(address, _abi, signerOrProvider) as IPrivacyMining;
   }
 }

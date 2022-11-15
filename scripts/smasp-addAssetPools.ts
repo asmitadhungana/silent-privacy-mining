@@ -7,9 +7,7 @@ export async function smasp_createAssetPool() {
   const wethInstance = await ethers.getContract('WETH');
   const smaspInstance = await ethers.getContract('SMASP', deployer);
 
-  const createAssetPoolTx = await smaspInstance.createAssetPool(
-    wethInstance.address
-  );
+  const createAssetPoolTx = await smaspInstance.createAssetPool(wethInstance.address);
   await createAssetPoolTx.wait(1);
 }
 
