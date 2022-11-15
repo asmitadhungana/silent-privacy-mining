@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PrivacyMining addRewardPool Gas snapshot for \`addRewardPool\` function 1`] = `120659`;
+
+exports[`PrivacyMining claimRewards: [Phase I] Gas snapshot for \`claimRewards\` function [phase=1] 1`] = `
+Object {
+  "calldataByteLength": 36,
+  "gasUsed": 93111,
+}
+`;
+
+exports[`PrivacyMining claimRewards: [Phase II] Gas snapshot for \`claimRewardsForPool\` function [Phase II] 1`] = `
+Object {
+  "calldataByteLength": 36,
+  "gasUsed": 123744,
+}
+`;
+
+exports[`PrivacyMining depositAssetToPool Gas snapshot for \`depositAssetToPool\` function 1`] = `
+Object {
+  "calldataByteLength": 68,
+  "gasUsed": 147186,
+}
+`;
+
+exports[`PrivacyMining getPendingRewards Gas snapshot for \`getPendingRewards\` function 1`] = `0`;
+
+exports[`PrivacyMining stakeSilentToPool Gas snapshot for \`stakeSilentToPool\` function 1`] = `
+Object {
+  "calldataByteLength": 68,
+  "gasUsed": 100313,
+}
+`;
+
+exports[`PrivacyMining unstakeSilentFromPool Gas snapshot for \`unstakeSilentFromPool\` function 1`] = `
+Object {
+  "calldataByteLength": 68,
+  "gasUsed": 116347,
+}
+`;
+
+exports[`PrivacyMining updatePoolRewardVariables Gas snapshot for \`updatePoolRewardVariables\` function 1`] = `
+Object {
+  "calldataByteLength": 36,
+  "gasUsed": 33729,
+}
+`;

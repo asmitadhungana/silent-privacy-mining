@@ -1,17 +1,22 @@
-node_modules
+
+# Env
 .env
-coverage
+
+# Node JS
+node_modules
+
+# Coverage
+coverage*
 coverage.json
+
+# Typechain
 typechain
-typechain-types
 
-#Hardhat files
-cache
+# Hardhat
 artifacts
-deployments
+cache
+gasReporterOutput.json
 
-#Local files
-.DS_Store
-
-__snapshots__
-yarn-error.log
+# VS Code
+vscode-user-settings.json
+vscode-workspace-settings.json

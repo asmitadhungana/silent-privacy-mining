@@ -1,13 +1,12 @@
 {
-    "compilerOptions": {
-      "target": "es2018",
-      "module": "commonjs",
-      "strict": false,
-      "esModuleInterop": true,
-      "moduleResolution": "node",
-      "forceConsistentCasingInFileNames": true,
-      "outDir": "dist"
-    },
-    "include": ["./scripts", "./test", "./deploy", "typechain/**/*"],
-    "files": ["./hardhat.config.ts", "./hardhat-helper-config.ts"]
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "strict": false,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "declaration": true
+  },
+  "include": ["./tasks", "./test", "./typechain"],
+  "files": ["hardhat.config.ts.bk1"]
 }
