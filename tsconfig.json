@@ -8,5 +8,5 @@
     "declaration": true
   },
   "include": ["./tasks", "./test", "./typechain"],
-  "files": ["hardhat.config.ts.bk1"]
+  "files": ["hardhat.config.ts"]
 }
