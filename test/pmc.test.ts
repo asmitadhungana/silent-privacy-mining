@@ -218,7 +218,7 @@ describe('PrivacyMining', () => {
       const timestamp1 = (await ethers.provider.getBlock(log1.blockNumber))
         .timestamp;
 
-      const expectedRewards = BigNumber.from(toUnit(1).toString()).mul(
+      const expectedRewards = toUnit(1).mul(
         timestamp2 - timestamp1
       );
 
@@ -787,9 +787,19 @@ describe('PrivacyMining', () => {
 
       await advanceTime(86400);
 
-      const log2 = await _.users[0].PrivacyMining.claimRewardsFromPool(
+      const log2 = await _.PrivacyMining.updatePoolRewardVariables(
         _.WETH.address
       );
+      const rewardPool = await _.PrivacyMining.rewardPoolInfo(_.WETH.address);
+      const userPoolInfo = await _.PrivacyMining.userPoolInfo(_.users[0].address, _.WETH.address);
+
+      const pendingRewards = await _.PrivacyMining.getPendingRewards(
+        _.WETH.address,
+        _.users[0].address
+      );
+      // const log2 = await _.users[0].PrivacyMining.claimRewardsFromPool(
+      //   _.WETH.address
+      // );
 
       const userSilentBalance_after = await _.users[0].SilentToken.balanceOf(
         _.users[0].address
