@@ -1,77 +1,58 @@
-// @ts-ignore
-import React, { useState } from "react";
-import { Stack, ThemeProvider } from "@mui/material";
-import theme from "./styles/Theme";
-import {
-  CustomMenu,
-  HeaderField,
-  PageHeader,
-  PageText,
-  SelectField,
-} from "./styles/HeaderStyles";
-import Earn from "./Earn";
-import Claim from "./Claim";
-import HeaderButtons from "./HeaderButtons";
-import { ContainedButton } from "./styles/CustomButton";
+import React, { useState, MouseEvent } from 'react';
+import { useWeb3React } from '@web3-react/core';
+import { Stack } from '@mui/material';
+import { injected } from '../utils/connectors';
+import { useEagerConnect, useInactiveListener } from '../utils/hooks';
+import { Provider } from '../utils/provider';
+import { ellipseAddress } from '../utils/web3';
+import { ContainedButton } from './styles/CustomButton';
 
-const phases = [
-  {
-    value: "1",
-    label: "Phase 1",
-  },
-  {
-    value: "2",
-    label: "Phase 2",
-  },
-];
+const Header = () => {
+  const context = useWeb3React<Provider>();
+  const { activate, deactivate, active, account } = context;
+  const [showDisconnect, setShowDisconnect] = useState(false);
 
-const Header = (props: {
-  connButtonText: string; connectWallet: () => React.MouseEventHandler<HTMLButtonElement> | undefined; 
-}) => {
-  const [phase, setPhase] = useState("1");
+  const handleActivate = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPhase(event.target.value);
+    await activate(injected);
   };
 
+  const handleDeactivate = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    deactivate();
+  };
+
+  const onMouseEnter = () => {
+    if (active && account) setShowDisconnect(true);
+    else setShowDisconnect(false);
+  };
+  const onMouseLeave = () => {
+    if (active && account) setShowDisconnect(false);
+    else setShowDisconnect(false);
+  };
+
+  const eagerConnectionSuccessful = useEagerConnect();
+  useInactiveListener(!eagerConnectionSuccessful);
+
   return (
-    <div>
-      <ThemeProvider theme={theme}>
-        <Stack
-          spacing={1}
-          direction='row'
-          marginTop={1.5}
-          justifyContent='flex-end'>
-          <ContainedButton variant='contained'>Kovan</ContainedButton>
-          <ContainedButton variant='contained' onClick={(e)=> {props.connectWallet()}}>{props.connButtonText}</ContainedButton>
-          <ContainedButton variant='contained'>MasterkEy</ContainedButton>
-        </Stack>
-        <PageHeader>Privacy Mining Program</PageHeader>
-        <PageText marginTop={1.5}>
-          Earn Silent Rewards by Depositing assets to your silent account
-        </PageText>
-        <Stack spacing={1} direction='row' marginTop={3} marginLeft={4}>
-          <HeaderField
-            id='outlined-basic'
-            label='Search for Tokens to Deposit'
-            variant='outlined'
-          />
-          <SelectField
-            id='select-phases'
-            select
-            value={phase}
-            onChange={handleChange}
-            variant='outlined'>
-            {phases.map((option) => (
-              <CustomMenu key={option.value} value={option.value}>
-                {option.label}
-              </CustomMenu>
-            ))}
-          </SelectField>
-        </Stack>
-      </ThemeProvider>
-      {phase === "1" ? <Earn /> : <Claim />}
-    </div>
+    <>
+      <Stack spacing={1} direction="row" marginTop={1.5} justifyContent="flex-end">
+        <ContainedButton variant="contained">Testnet</ContainedButton>
+        <ContainedButton variant="contained">Silent Address</ContainedButton>
+        <ContainedButton
+          variant="contained"
+          onClick={(e) => {
+            active ? handleDeactivate(e) : handleActivate(e);
+          }}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+        >
+          {active && account ? (showDisconnect ? 'Disconnect' : ellipseAddress(account)) : 'Connect'}
+        </ContainedButton>
+      </Stack>
+    </>
   );
 };
 

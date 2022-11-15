@@ -16,25 +16,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": ["./src"]
 }
-
-//fetch deployedpools and if assetid phase 1
-// global pool balance -> protocol deposit
-// balance -> connected wallet token balance
-//deposit _> smsap depositaccess
-//claim -> claimrewards
-//rewards pending should be called repeatedly
-//voucher claimed -> userpoolvoucher balance
-//user pool balance -> lifetime deposit
-//reward rate change to per day
-//phase 2
-//voucher balance static
-//staked 
-
-//stake
-//staking power : user pool balance
-//Pending rewards : reward
-//balance : userpoolbalance/voucher balance
-////0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9
-

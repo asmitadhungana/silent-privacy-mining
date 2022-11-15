@@ -4,18 +4,18 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_assetId",
+          "name": "assetId",
           "type": "uint256"
         },
         {
-          "internalType": "uint8",
+          "internalType": "uint256",
           "name": "assumedPhase",
-          "type": "uint8"
+          "type": "uint256"
         },
         {
-          "internalType": "uint8",
+          "internalType": "uint256",
           "name": "correctPhase",
-          "type": "uint8"
+          "type": "uint256"
         }
       ],
       "name": "InvalidPhase",
@@ -221,5 +221,5 @@
       "type": "function"
     }
   ],
-  "address": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+  "address": "0x0165878A594ca255338adfa4d48449f69242Eb8F"
 }
