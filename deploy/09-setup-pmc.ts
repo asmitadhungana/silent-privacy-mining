@@ -13,17 +13,16 @@ const setupPmc: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   log('Transferring ownership of PMC to Owmer/Multisig...');
 
-  const transferPmcOwnershipToMultisig = await pmc.transferOwnership(multisig);
+  const transferPmcOwnershipToMultisig = await pmc.setOwner(multisig);
   await transferPmcOwnershipToMultisig.wait(1);
 
   log(`09.1 - PMC setup successful: Mutisig ${multisig} set as PMC owner`);
 
-  log('Transferring half of Silent tokens from the initial deployer to multisig...');
+  log('Transferring all Silent tokens from the initial deployer to multisig...');
   const silentTotalSupply = await silentToken.totalSupply();
-  await silentToken.transfer(multisig, silentTotalSupply.div(2));
+  await silentToken.transfer(multisig, silentTotalSupply.div(3));
   log(`09.2 - PMC setup successful: Mutisig ${multisig} set as PMC owner`);
 };
 
 export default setupPmc;
 setupPmc.tags = ['all', 'setupPmc'];
-setupPmc.dependencies = ['setupSmasp'];

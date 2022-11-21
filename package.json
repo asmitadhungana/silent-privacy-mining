@@ -70,6 +70,8 @@
   "dependencies": {
     "@uniswap/snapshot-gas-cost": "^1.0.0",
     "dotenv": "^16.0.3",
-    "mocha-chai-jest-snapshot": "^1.1.4"
+    "hardhat-contract-sizer": "^2.6.1",
+    "mocha-chai-jest-snapshot": "^1.1.4",
+    "solmate": "^6.6.1"
   }
 }

@@ -16,7 +16,7 @@ const setupSmaspContract: DeployFunction = async (hre: HardhatRuntimeEnvironment
 
   log('Deployer: Transferring ownership of SMASP to Owmer/Multisig...');
 
-  const transferSmaspOwnershipToMultisig = await smasp.transferOwnership(multisig);
+  const transferSmaspOwnershipToMultisig = await smasp.setOwner(multisig);
   await transferSmaspOwnershipToMultisig.wait(1);
 
   // Attach the multisig as a signer to the smasp instance
@@ -48,4 +48,3 @@ const setupSmaspContract: DeployFunction = async (hre: HardhatRuntimeEnvironment
 
 export default setupSmaspContract;
 setupSmaspContract.tags = ['all', 'setupSmasp'];
-setupSmaspContract.dependencies = ['erc20Tokens', 'privacyMining'];

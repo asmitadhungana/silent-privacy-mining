@@ -4,6 +4,7 @@ import 'hardhat-deploy';
 import '@nomiclabs/hardhat-ethers';
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomiclabs/hardhat-solhint';
+import 'hardhat-contract-sizer';
 
 /** @type import('hardhat/config').HardhatUserConfig */
 const config: HardhatUserConfig = {
