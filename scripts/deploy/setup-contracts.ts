@@ -9,7 +9,7 @@ import {
   SilentToken
 } from '../typechain-types';
 
-const { weth, dai, usdc, silentToken, smasp, privacyMining } = require('../deployedContracts.json');
+const { weth, dai, usdc, silentToken, smasp, privacyMining } = require('../../deployedContracts.json');
 
 // Fetch contract instances
 async function helper_fetchContractInstances() {

@@ -58,7 +58,7 @@ async function do_deployContracts(_deployer) {
     privacyMining: privacyMining.address
   };
 
-  fs.writeFile(path.resolve(__dirname, '../deployedContracts.json'), JSON.stringify(deployedContracts), (err) => {
+  fs.writeFile(path.resolve(__dirname, '../../deployedContracts.json'), JSON.stringify(deployedContracts), (err) => {
     if (err) throw err;
   });
 }

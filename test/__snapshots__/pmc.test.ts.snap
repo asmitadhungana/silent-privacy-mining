@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PrivacyMining addRewardPool phase I Gas snapshot for \`addRewardPool\` function: [Initiate Phase I] 1`] = `77853`;
+
+exports[`PrivacyMining addRewardPool phase II Gas snapshot for \`addRewardPool\` function: [Upgrade to Phase II] 1`] = `65358`;
+
+exports[`PrivacyMining claimRewards: [Phase I] Gas snapshot for \`claimRewards\` function [phase=1] 1`] = `
+Object {
+  "calldataByteLength": 36,
+  "gasUsed": 92396,
+}
+`;
+
+exports[`PrivacyMining claimRewards: [Phase II] Gas snapshot for \`claimRewardsForPool\` function [Phase II] 1`] = `
+Object {
+  "calldataByteLength": 36,
+  "gasUsed": 122996,
+}
+`;
+
+exports[`PrivacyMining depositAssetToPool Gas snapshot for \`depositAssetToPool\` function 1`] = `
+Object {
+  "calldataByteLength": 68,
+  "gasUsed": 149681,
+}
+`;
+
+exports[`PrivacyMining getPendingRewards Gas snapshot for \`getPendingRewards\` function 1`] = `0`;
+
+exports[`PrivacyMining massUpdatePoolRewardVariables Gas snapshot for \`massUpdatePoolRewardVariables\` function 1`] = `
+Object {
+  "calldataByteLength": 100,
+  "gasUsed": 35148,
+}
+`;
+
+exports[`PrivacyMining stakeSilentToPool Gas snapshot for \`stakeSilentToPool\` function 1`] = `
+Object {
+  "calldataByteLength": 68,
+  "gasUsed": 103391,
+}
+`;
+
+exports[`PrivacyMining unstakeSilentFromPool Gas snapshot for \`unstakeSilentFromPool\` function 1`] = `
+Object {
+  "calldataByteLength": 68,
+  "gasUsed": 115512,
+}
+`;
+
+exports[`PrivacyMining updatePoolRewardVariables Gas snapshot for \`updatePoolRewardVariables\` function 1`] = `
+Object {
+  "calldataByteLength": 36,
+  "gasUsed": 34393,
+}
+`;
+
+exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: non-zero to non-zero 1`] = `
+Object {
+  "calldataByteLength": 100,
+  "gasUsed": 37691,
+}
+`;
+
+exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: non-zero to zero [phase I] 1`] = `
+Object {
+  "calldataByteLength": 100,
+  "gasUsed": 36978,
+}
+`;
+
+exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: non-zero to zero [phase II] 1`] = `
+Object {
+  "calldataByteLength": 100,
+  "gasUsed": 33358,
+}
+`;
+
+exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: zero to non-zero 1`] = `
+Object {
+  "calldataByteLength": 100,
+  "gasUsed": 37691,
+}
+`;

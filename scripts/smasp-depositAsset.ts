@@ -16,25 +16,29 @@ export async function smasp_depositAssetToPool() {
   const { deployer } = await getNamedAccounts();
 
   // Using deployer as signer
-  const wethAssetId: SilentToken = await ethers.getContract('WETH', deployer);
-  const smasp: SMASP = await ethers.getContract('SMASP', deployer);
+  const signer = deployer;
+
+  const weth: SilentToken = await ethers.getContract('WETH', signer);
+
+  const pool = weth;
+  const smasp: SMASP = await ethers.getContract('SMASP', signer);
 
   // // Using an user as signer
-  // const wethAssetId: SilentToken = await ethers.getContract("WETH", users[0]);
+  // const weth: SilentToken = await ethers.getContract("WETH", users[0]);
   // const smasp: SMASP = await ethers.getContract("SMASP", users[0]);
 
   const depositAmount = toUnit('100');
 
   // Approve SMASP for respective token transfer
-  await token_approve_transfer(wethAssetId, smasp.address, depositAmount);
+  await token_approve_transfer(pool, smasp.address, depositAmount);
 
   console.log('Token approval success');
 
   // Deposit the token/asset
-  const depositAssetTx = await smasp.depositAsset(wethAssetId.address, depositAmount);
+  const depositAssetTx = await smasp.depositAsset(pool.address, depositAmount);
   depositAssetTx.wait(1);
 
-  console.log(`Deposited 100 ${await wethAssetId.name()} tokens to SMASP`);
+  console.log(`User ${signer} deposited 100 ${await pool.name()} tokens to SMASP`);
 }
 
 smasp_depositAssetToPool()

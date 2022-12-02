@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { MIN_DELAY, PROPOSERS, EXECUTORS } from '../hardhat-helper-config';
+import { time } from 'console';
 
 const deployTimelock: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments } = hre;
@@ -12,7 +13,8 @@ const deployTimelock: DeployFunction = async (hre: HardhatRuntimeEnvironment) =>
     from: deployer,
     args: [MIN_DELAY, PROPOSERS, EXECUTORS],
     log: true,
-    autoMine: true
+    autoMine: true,
+    waitConfirmations: 1
   });
 
   log(`02 - Deployed 'Timelock' contract at ${timelock.address}`);

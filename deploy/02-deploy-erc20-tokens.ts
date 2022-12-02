@@ -22,7 +22,7 @@ const deployERC20Tokens: DeployFunction = async (hre: HardhatRuntimeEnvironment)
       contract: 'SilentToken',
       args: [`${tokens[i]} token`, tokens[i].toUpperCase(), toUnit(1000000)],
       log: true,
-      waitConfirmations: 0
+      waitConfirmations: 1
     });
 
     log(`04.${i} - Deployed ${tokens[i].toUpperCase()} token at ${_tokens[i].address}`);

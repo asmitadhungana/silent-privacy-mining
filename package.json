@@ -8,7 +8,11 @@
     "prettier": "prettier --write './**/*.{ts,tsx}'",
     "lint": "yarn run lint:eslint && yarn run lint:solhint",
     "lint:eslint": "eslint .",
-    "lint:solhint": "solhint contracts/**/*.sol"
+    "lint:solhint": "solhint contracts/**/*.sol",
+    "test:echidna": "yarn hardhat compile && echidna-test . --contract EchidnaPMC --config contracts/echidna-tests/echidna-config.yaml",
+    "test:unit-sc": "rm -rf artifacts && yarn hardhat node & yarn hardhat test",
+    "deploy:with-setup": "rm -rf artifacts && yarn hardhat node",
+    "deploy:wo-setup": "rm -rf artifacts && yarn hardhat node & yarn hardhat run scripts/deploy/deploy-contracts.ts"
   },
   "repository": {
     "type": "git",

@@ -8,16 +8,20 @@ const toUnit = (amount) => toBN(toWei(amount.toString(), 'ether'));
 export async function pmc_unstakeSilentFromPool() {
   const users = await getUnnamedAccounts();
   const { deployer } = await getNamedAccounts();
+  const signer = deployer;
 
   const weth: SilentToken = await ethers.getContract('WETH');
-  const pmc: PrivacyMining = await ethers.getContract('PrivacyMining', deployer);
+
+  const pool = weth;
+
+  const pmc: PrivacyMining = await ethers.getContract('PrivacyMining', signer);
   const unstakeAmount = toUnit('100');
 
   // Stake the asset
-  const unstakeTx = await pmc.unstakeSilentFromPool(weth.address, unstakeAmount);
+  const unstakeTx = await pmc.unstakeSilentFromPool(pool.address, unstakeAmount);
   unstakeTx.wait(1);
 
-  console.log(`Untaked 100 Silent tokens from PMC`);
+  console.log(`Untaked 100 Silent tokens from PMC's ${await pool.name()}`);
 }
 
 // Provide the value from console later...

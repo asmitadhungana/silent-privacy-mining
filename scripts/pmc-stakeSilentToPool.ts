@@ -17,8 +17,13 @@ export async function pmc_stakeSilentToPool() {
   const { deployer } = await getNamedAccounts();
 
   const weth: SilentToken = await ethers.getContract('WETH');
-  const silentToken: SilentToken = await ethers.getContract('SilentToken', deployer);
-  const pmc: PrivacyMining = await ethers.getContract('PrivacyMining', deployer);
+
+  // Cache reward pool instance and signer for accessibility
+  const pool = weth;
+  const signer = deployer;
+
+  const silentToken: SilentToken = await ethers.getContract('SilentToken', signer);
+  const pmc: PrivacyMining = await ethers.getContract('PrivacyMining', signer);
 
   const stakeAmount = toUnit('100');
 
@@ -26,10 +31,10 @@ export async function pmc_stakeSilentToPool() {
   await token_approve_transfer(silentToken, pmc.address, stakeAmount);
 
   // Stake the asset
-  const stakeTx = await pmc.stakeSilentToPool(weth.address, stakeAmount);
+  const stakeTx = await pmc.stakeSilentToPool(pool.address, stakeAmount);
   stakeTx.wait(1);
 
-  console.log(`Staked 100 Silent tokens to PMC`);
+  console.log(`User ${signer} staked ${stakeAmount} Silent tokens to PMC's ${await pool.name()}`);
 }
 
 pmc_stakeSilentToPool()

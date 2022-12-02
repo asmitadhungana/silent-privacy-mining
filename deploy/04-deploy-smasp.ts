@@ -11,7 +11,7 @@ const deploySMASPContract: DeployFunction = async (hre: HardhatRuntimeEnvironmen
     from: deployer,
     args: [],
     log: true,
-    waitConfirmations: 0
+    waitConfirmations: 1
   });
 
   log(`06-Deployed 'SMASP' contract at ${smasp.address} `);

@@ -2,12 +2,17 @@ import { ethers, network } from 'hardhat';
 import { deployments, getUnnamedAccounts, getNamedAccounts } from 'hardhat';
 
 export async function smasp_createAssetPool() {
-  const { deployer } = await getNamedAccounts();
+  const { multisig } = await getNamedAccounts();
 
-  const wethInstance = await ethers.getContract('WETH');
-  const smaspInstance = await ethers.getContract('SMASP', deployer);
+  // Fetch the deployed instance of asset contract to be added to SMASP
+  const weth = await ethers.getContract('WETH');
 
-  const createAssetPoolTx = await smaspInstance.createAssetPool(wethInstance.address);
+  const pool = weth;
+  const signer = multisig;
+
+  const smaspInstance = await ethers.getContract('SMASP', signer);
+
+  const createAssetPoolTx = await smaspInstance.createAssetPool(pool.address);
   await createAssetPoolTx.wait(1);
 }
 

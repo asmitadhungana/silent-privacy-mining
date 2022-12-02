@@ -16,7 +16,7 @@ const deploySilentToken: DeployFunction = async (hre: HardhatRuntimeEnvironment)
     from: deployer,
     args: ['Silent Token', 'SILENT', toUnit(1000000)],
     log: true,
-    waitConfirmations: 0
+    waitConfirmations: 1
   });
 
   log(`05 - Deployed 'SilentToken' at ${silentToken.address}`);
