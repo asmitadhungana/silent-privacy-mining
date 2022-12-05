@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {Owned} from 'solmate/src/auth/Owned.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 /// @dev Interface of the PrivacyMining contract
 interface IPrivacyMining {
@@ -16,14 +16,14 @@ interface IPrivacyMining {
 }
 
 /// @dev Mock/Dummy implementation for the SMASP contract
-contract SMASP is Pausable, Owned {
+contract SMASP is Pausable, Ownable {
   using SafeERC20 for IERC20;
   address public privacyMiningContract;
 
   /// @dev Maps the assetId of a token to its contract address
   mapping(uint256 => address) public assetIdToToken;
 
-  constructor() Owned(msg.sender) {}
+  constructor() {}
 
   /// @dev Lets the owenr add the PrivacyMining Contract to SMASP
   /// Emits the event {PrivacyMiningContractAdded}

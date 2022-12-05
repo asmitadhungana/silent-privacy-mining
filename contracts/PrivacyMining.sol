@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {Owned} from 'solmate/src/auth/Owned.sol';
-import {ReentrancyGuard} from 'solmate/src/utils/ReentrancyGuard.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {ReentrancyGuard} from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import {Pausable} from '@openzeppelin/contracts/security/Pausable.sol';
 import {SafeERC20, IERC20} from './libraries/SafeERC20.sol';
 import {IPrivacyMining} from './interfaces/IPrivacyMining.sol';
-import {SafeCastLib} from './libraries/SafeCastLib.sol';
+import {SafeCast} from './libraries/SafeCast.sol';
 import {FullMath} from './libraries/FullMath.sol';
 import {Math} from './libraries/Math.sol';
 import 'hardhat/console.sol';
@@ -34,8 +34,6 @@ error InvalidAmount();
  */
 error IneligibleUser();
 
-error InvalidValue(string variable);
-
 /**
  * @dev Thrown when the deposit/stake functions are called upon a
  * reward pool after it's reward period has ended
@@ -60,10 +58,10 @@ error RewardPeriodOngoing(uint256 assetId, uint256 currentTimestamp, uint256 rew
  * In Phase I: Virtualtokens called vouchers will be distributed
  * In Phase II : Silent tokens will be distributed as rewards
  */
-contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Owned {
+contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
   using SafeERC20 for IERC20;
-  using SafeCastLib for uint256;
-  using SafeCastLib for int256;
+  using SafeCast for uint256;
+  using SafeCast for int256;
 
   /* ========== STATE VARIABLES ========== */
 
@@ -145,7 +143,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Owned {
    * Requirements:
    * `_silentToken` and `_smaspContract` cannot be the zero address
    */
-  constructor(address _silentToken, address _smaspContract) Owned(msg.sender) {
+  constructor(address _silentToken, address _smaspContract) {
     require(_silentToken != address(0));
     require(_smaspContract != address(0));
 
@@ -245,7 +243,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Owned {
         poolAccRewardPerShare,
         (10 ** rewardPool_memory.rewardPrecision)
       )
-    ) - userPoolInfo_memory.rewardDebt).safeCastInt256ToUint256();
+    ) - userPoolInfo_memory.rewardDebt).toUint256();
   }
 
   /* ========== INTERNAL FUNCTIONS ========== */
@@ -541,7 +539,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Owned {
 
     // Compute the user's accumulated reward since user's last claimed block
     uint256 userPendingRewardSinceLastClaimedBlock = (userAccumulatedRewardSinceGenesis -
-      userPoolInfo_storage.rewardDebt).safeCastInt256ToUint256();
+      userPoolInfo_storage.rewardDebt).toUint256();
 
     userPoolInfo_storage.rewardDebt = userAccumulatedRewardSinceGenesis;
 

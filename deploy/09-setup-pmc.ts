@@ -13,7 +13,7 @@ const setupPmc: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   log('Transferring ownership of PMC to Owmer/Multisig...');
 
-  const transferPmcOwnershipToMultisig = await pmc.setOwner(multisig);
+  const transferPmcOwnershipToMultisig = await pmc.transferOwnership(multisig);
   await transferPmcOwnershipToMultisig.wait(1);
 
   log(`09.1 - PMC setup successful: Mutisig ${multisig} set as PMC owner`);

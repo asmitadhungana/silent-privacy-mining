@@ -11,8 +11,8 @@
     "lint:solhint": "solhint contracts/**/*.sol",
     "test:echidna": "yarn hardhat compile && echidna-test . --contract EchidnaPMC --config contracts/echidna-tests/echidna-config.yaml",
     "test:unit-sc": "rm -rf artifacts && yarn hardhat node & yarn hardhat test",
-    "deploy:with-setup": "rm -rf artifacts && yarn hardhat node",
-    "deploy:wo-setup": "rm -rf artifacts && yarn hardhat node & yarn hardhat run scripts/deploy/deploy-contracts.ts"
+    "deploy:with-setup": "rm -rf artifacts && rm -rf cache && yarn hardhat node",
+    "deploy:wo-setup": "rm -rf artifacts && rm -rf cache && yarn hardhat node & yarn hardhat run scripts/deploy/deploy-contracts.ts"
   },
   "repository": {
     "type": "git",
@@ -75,7 +75,6 @@
     "@uniswap/snapshot-gas-cost": "^1.0.0",
     "dotenv": "^16.0.3",
     "hardhat-contract-sizer": "^2.6.1",
-    "mocha-chai-jest-snapshot": "^1.1.4",
-    "solmate": "^6.6.1"
+    "mocha-chai-jest-snapshot": "^1.1.4"
   }
 }

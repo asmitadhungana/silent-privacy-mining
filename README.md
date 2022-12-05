@@ -1,15 +1,16 @@
 # Silent PMC Operations Manual
 
-## Setup:
+## 1. Setup:
 
 Install all the dependencies
-Backend:
+
+#### Backend:
 
 ```
     $ yarn  install
 ```
 
-Frontend:
+#### Frontend:
 
 ```
     $ cd frontend && yarn install
@@ -46,7 +47,7 @@ Or install the pre-built [`eth-security-toolbox`](https://github.com/trailofbits
 
 ---
 
-**Deployments**
+## 2. Deploy:
 
 To deploy the contracts and conduct setup using hardhat-deploy plugin via deploy/ scripts:
 
@@ -56,7 +57,7 @@ To deploy the contracts and conduct setup using hardhat-deploy plugin via deploy
 
 ---
 
-**Test contracts:**
+## 3. Test:
 
 1. Run Smart Contracts Unit tests:
 
@@ -64,8 +65,8 @@ To deploy the contracts and conduct setup using hardhat-deploy plugin via deploy
     $ yarn test:unit-sc
 ```
 
-2. Run Echidna Fuzz tests
-   Note: You must have echidna pre-installed in your local machine to run the following command or should be running the
+2. Run Echidna Fuzz tests </br>
+   Note: You must have echidna pre-installed in your local machine to run the following command or should be running the corresponding docker container
 
 ```
     $ yarn test:echidna
@@ -73,7 +74,7 @@ To deploy the contracts and conduct setup using hardhat-deploy plugin via deploy
 
 ---
 
-**2. Run scripts:**
+## 4. Run scripts:
 
 ```
     $ yarn hardhat --network <networkName> run scripts/<script_file>
