@@ -32,7 +32,7 @@ error InvalidAmount();
  * @dev Thrown when a user ineligible to participate in a given reward
  * pool accesses a mutable function
  */
-error IneligibleUser();
+error IneligibleUser(uint256 assetId, address user);
 
 /**
  * @dev Thrown when the deposit/stake functions are called upon a
@@ -82,8 +82,9 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
    * reward pools in the privacy mining program
    */
   struct RewardPool {
-    uint8 rewardPrecision;
+    uint8 cycle;
     uint8 phase;
+    uint8 rewardPrecision;
     uint8 allocPoint;
     uint40 rewardStartTime;
     uint40 lastRewardTime;
@@ -97,8 +98,9 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
    * in each RewardPool the user partipates in
    */
   struct UserPoolInfo {
+    uint8 cycle;
     uint8 phase;
-    uint248 userVoucherBalance;
+    uint240 userVoucherBalance;
     uint256 userPoolBalance;
     int256 rewardDebt;
   }
@@ -107,6 +109,16 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
    * @dev Stores the reward period for reward pools in both the phases
    */
   uint256 private constant GLOBAL_REWARD_PERIOD = 7 days;
+
+  /**
+   * @dev Stores the precision points for Voucher virtual tokens
+   */
+  uint256 private constant ACC_VOUCHER_PRECISION = 18;
+
+  /**
+   * @dev Stores the precision points for SILENT token
+   */
+  uint256 private constant ACC_SILENT_PRECISION = 18;
 
   /**
    * @dev Silent token contract Instance
@@ -211,7 +223,6 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     return phaseInfo[_phase];
   }
 
-  // Echidna: Changed this function from view -> mutative
   /**
    * @dev Fetches the pending rewards of a user w.r.t. a reward pool
    * @param _assetId: Asset id of asset reward pool in SMASP
@@ -220,7 +231,9 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
   function getPendingRewards(uint256 _assetId, address _user) external view returns (uint256 pending) {
     // Require user and rewardPool to be in the same phase
     RewardPool memory rewardPool_memory = rewardPoolInfo[_assetId];
-    UserPoolInfo storage userPoolInfo_memory = userPoolInfo[_user][_assetId];
+    UserPoolInfo memory userPoolInfo_memory = userPoolInfo[_user][_assetId];
+
+    if (userPoolInfo_memory.cycle != rewardPool_memory.cycle) revert IneligibleUser({assetId: _assetId, user: _user});
 
     if (userPoolInfo_memory.phase != rewardPool_memory.phase)
       revert InvalidPhase({
@@ -251,22 +264,25 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
   /**
    * @dev Registers a user in Phase two of a reward pool
    * @param userPoolInfo_storage: UserPoolInfo for user for the pool
-   * the UserPoolInfo.phase is changed to 2
-   * the UserPoolInfo.userVoucherBalance is retained from phase 1
-   * all other UserPoolInfo values are reset to default/zeroes
    *
-   * Requirements:
-   * - User must have collected vouchers during phase 1 of the pool
+   * If user is entering phase 1:
+   * - the UserPoolInfo.phase is changed to 1
+   * - all other variables from UserPoolInfo in userPoolInfo mapping w.r.t reward pool
+   *   are reset to zero values
+   *
+   * If user is entering phase 2:
+   * - the UserPoolInfo.phase is changed to 2
+   * - the UserPoolInfo.userVoucherBalance from phase 1 is divided by 1e18
+   * - all other variables from UserPoolInfo in userPoolInfo mapping w.r.t reward pool
+   *   are reset to zero values
+   *
    */
   function _enterPhase(UserPoolInfo storage userPoolInfo_storage, uint256 _phase) internal {
-    // userVoucherBalance remains unchanged, all others change
-    userPoolInfo_storage.phase = uint8(_phase);
     userPoolInfo_storage.userPoolBalance = 0;
     userPoolInfo_storage.rewardDebt = 0;
+    userPoolInfo_storage.phase = uint8(_phase);
     if (_phase == 1) {
       userPoolInfo_storage.userVoucherBalance = 0;
-    } else {
-      require(userPoolInfo_storage.userVoucherBalance > 0);
     }
   }
 
@@ -310,8 +326,8 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
    */
   function updatePoolRewardVariables(uint256 _assetId) public returns (RewardPool memory rewardPool_memory) {
     rewardPool_memory = rewardPoolInfo[_assetId];
-    // COMPUTE POOL'S `accRewardPerShare` and `lastRewardTime`
 
+    // COMPUTE POOL'S `accRewardPerShare` and `lastRewardTime`
     if (block.timestamp > rewardPool_memory.lastRewardTime) {
       rewardPool_memory.accRewardPerShare = accRewardPerShare(rewardPool_memory);
       rewardPool_memory.lastRewardTime = uint40(lastRewardApplicableTime(rewardPool_memory.rewardEndTime));
@@ -370,18 +386,19 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
   ) public override onlyValidPhase(_assetId, 1) beforePeriodFinished(_assetId) nonReentrant {
     require(msg.sender == SMASP, 'Only SMASP can call');
 
+    RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
     UserPoolInfo storage userPoolInfo_storage = userPoolInfo[_user][_assetId];
 
-    // In first ever deposit: Update user's pool phase to 1
+    // In first ever deposit: Register user to phase 1 w.r.t the reward pool
     if (userPoolInfo_storage.phase != 1) {
-      if (userPoolInfo_storage.phase == 0) {
-        userPoolInfo_storage.phase = 1;
-      } else {
-        _enterPhase(userPoolInfo_storage, 1);
-      }
+      // Register the user to phase 1
+      _enterPhase(userPoolInfo_storage, 1);
+      // Assign the user to have same cycle as reward pool
+      userPoolInfo_storage.cycle = rewardPool_memory.cycle;
     }
 
-    RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
+    // Verify that the user's cycle is same w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle) revert IneligibleUser({assetId: _assetId, user: _user});
 
     // Update userPoolBalance
     userPoolInfo_storage.userPoolBalance += _amount;
@@ -422,13 +439,20 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
     UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][_assetId];
 
-    // If user's phase w.r.t reward pool is one, upgrade it to two
+    // Verify that the user is in the same cycle w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle) {
+      // User can enter the same cycle only after depositing some amount of asset to pool
+      revert IneligibleUser({assetId: _assetId, user: msg.sender});
+    }
+
+    // If the user is not in the same phase w.r.t reward pool
     if (userPoolInfo_storage.phase != 2) {
-      if (userPoolInfo_storage.phase == 0) {
-        revert IneligibleUser();
-      } else {
-        _enterPhase(userPoolInfo_storage, 2);
-      }
+      // Register the user in phase 2
+      _enterPhase(userPoolInfo_storage, 2);
+      // Retain the voucherBalance of user in whole number: divide by ACC_VOUCHER_PRECISION
+      userPoolInfo_storage.userVoucherBalance = uint240(
+        1 + userPoolInfo_storage.userVoucherBalance / 10 ** (ACC_VOUCHER_PRECISION)
+      );
     }
 
     // Compute the effective stake for user in the reward pool
@@ -476,8 +500,12 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
     UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][_assetId];
 
+    // Verify that the user is in same cycle w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle)
+      revert IneligibleUser({assetId: _assetId, user: msg.sender});
+
     // Verify that user is in phase 2 w.r.t the reward pool
-    if (userPoolInfo_storage.phase != 2) revert IneligibleUser();
+    if (userPoolInfo_storage.phase != 2) revert IneligibleUser({assetId: _assetId, user: msg.sender});
 
     // Compute the original amount staked in the pool by the user
     uint256 userOriginalStake;
@@ -521,6 +549,10 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
     UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][_assetId];
 
+    // Verify that the user is in same cycle w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle)
+      revert IneligibleUser({assetId: _assetId, user: msg.sender});
+
     // Verify that the user is in same phase w.r.t the reward pool
     if (userPoolInfo_storage.phase != rewardPool_memory.phase)
       revert InvalidPhase({
@@ -548,7 +580,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
       if (rewardPool_memory.phase == 2) {
         SILENT.safeTransfer(msg.sender, userPendingRewardSinceLastClaimedBlock);
       } else if (rewardPool_memory.phase == 1) {
-        userPoolInfo_storage.userVoucherBalance += uint248(userPendingRewardSinceLastClaimedBlock);
+        userPoolInfo_storage.userVoucherBalance += uint240(userPendingRewardSinceLastClaimedBlock);
       }
     }
 
@@ -585,8 +617,12 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     // If the Reward Pool is getting added to PMC for phase one
     if (_phase == 1) {
       // Verify that a corresponding asset pool exists in SMASP
+      // This check can be limited to first ever reward cycle
       require(ISMASP(SMASP).assetIdToToken(_assetId) != address(0), 'Invalid _assetId');
-      rewardPool_storage.rewardPrecision = 18;
+      // Update the reward cycle of the pool
+      rewardPool_storage.cycle += 1;
+      // Set the reward precision for the reward pool
+      rewardPool_storage.rewardPrecision = uint8(ACC_VOUCHER_PRECISION);
     } else if (_phase == 2) {
       // Verify that the current reward period has already ended
       if (block.timestamp <= rewardPoolInfo[_assetId].rewardEndTime)
@@ -596,10 +632,12 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
           rewardEndTimestamp: rewardPoolInfo[_assetId].rewardEndTime
         });
       // Reset reward pool's accRewardPerShare and globalPoolBalance
+      // Note: reward pool's current cycle is retained from phase 1
       rewardPool_storage.accRewardPerShare = 0;
       rewardPool_storage.globalPoolBalance = 0;
-      rewardPool_storage.rewardPrecision = 36;
+      rewardPool_storage.rewardPrecision = uint8(ACC_SILENT_PRECISION);
       // Deduce its previous allocPoint from the total allocPoint of phase 1
+      // Redundant step if pool's allocPoint was already updated to zero in func: `updateRewardPoolAllocations`
       phaseInfo[1].totalAllocPoint -= uint128(rewardPool_storage.allocPoint);
     } else {
       revert InvalidPhase({assetId: _assetId, assumedPhase: _phase - 1, correctPhase: rewardPool_storage.phase});
@@ -609,7 +647,7 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     phaseInfo[_phase].totalAllocPoint += _allocPoint;
 
     // Initialize the attributes for the pool's RewardPool struct
-    rewardPool_storage.phase = uint8(_phase); // No need for safeCast since we've checked _phase == 1 or 2 already
+    rewardPool_storage.phase = uint8(_phase);
     rewardPool_storage.allocPoint = _allocPoint;
     rewardPool_storage.rewardStartTime = uint40(block.timestamp); // NOTE: This could be initialised in the very first deposit/stake to a pool
     rewardPool_storage.lastRewardTime = uint40(block.timestamp);
@@ -643,33 +681,46 @@ contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     uint256 _phase,
     uint8 _newAllocPoint
   ) external onlyOwner onlyValidPhase(_assetId, _phase) {
+    RewardPool storage rewardPool_storage = rewardPoolInfo[_assetId];
+
     // Verify that _phase is either 1 or 2 or else allocPoint can be set for a non-existent pool
     if (_phase != 1 && _phase != 2)
-      revert InvalidPhase({assetId: _assetId, assumedPhase: _phase, correctPhase: rewardPoolInfo[_assetId].phase});
+      revert InvalidPhase({assetId: _assetId, assumedPhase: _phase, correctPhase: rewardPool_storage.phase});
+
     // AllocPoint cannot be updated until the current reward period is finished
-    if (block.timestamp <= rewardPoolInfo[_assetId].rewardEndTime)
+    if (block.timestamp <= rewardPool_storage.rewardEndTime)
       revert RewardPeriodOngoing({
         assetId: _assetId,
         currentTimestamp: block.timestamp,
-        rewardEndTimestamp: rewardPoolInfo[_assetId].rewardEndTime
+        rewardEndTimestamp: rewardPool_storage.rewardEndTime
       });
 
     // Update the total allocations for the phase
     phaseInfo[_phase].totalAllocPoint =
-      (phaseInfo[_phase].totalAllocPoint - rewardPoolInfo[_assetId].allocPoint) +
+      (phaseInfo[_phase].totalAllocPoint - rewardPool_storage.allocPoint) +
       _newAllocPoint;
 
-    rewardPoolInfo[_assetId].allocPoint = _newAllocPoint;
+    // Upgrade the reward pool's allocPoint in storage to _newAllocPoint
+    rewardPool_storage.allocPoint = _newAllocPoint;
 
+    // If the _newAllocPoint is zero
     if (_newAllocPoint == 0) {
+      // If the _phase is 2
       if (_phase == 2) {
-        // Delete the reward pool altogether
-        delete rewardPoolInfo[_assetId]; // NOTE: GAS: Updating the storage before and deleting later can be optimized
+        // Delete the reward pool variables except for cycle
+        rewardPool_storage.phase = 0;
+        rewardPool_storage.rewardPrecision = 0;
+        rewardPool_storage.allocPoint = 0;
+        rewardPool_storage.rewardStartTime = 0;
+        rewardPool_storage.lastRewardTime = 0;
+        rewardPool_storage.rewardEndTime = 0;
+        rewardPool_storage.accRewardPerShare = 0;
+        rewardPool_storage.globalPoolBalance = 0;
       }
     } else {
       // Renew the pool's reward period
-      rewardPoolInfo[_assetId].rewardStartTime = uint40(block.timestamp);
-      rewardPoolInfo[_assetId].rewardEndTime = uint40(block.timestamp + GLOBAL_REWARD_PERIOD);
+      rewardPool_storage.rewardStartTime = uint40(block.timestamp);
+      rewardPool_storage.rewardEndTime = uint40(block.timestamp + GLOBAL_REWARD_PERIOD);
     }
 
     // Emit an event to notify

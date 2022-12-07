@@ -6,7 +6,7 @@ import { BigNumber, constants, utils } from 'ethers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { anyUint, anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { ethers, deployments, getUnnamedAccounts, getNamedAccounts } from 'hardhat';
-import { SMASP, PrivacyMining, SilentToken, Owned, PrivacyMining__factory, SMASP__factory } from '../typechain-types';
+import { SMASP, PrivacyMining, SilentToken, PrivacyMining__factory, SMASP__factory } from '../typechain-types';
 import { advanceTime, setupUser, setupUsers, toBN, toUnit, advanceBlockTo, fromUnit, advanceBlock } from './utils';
 import snapshotGasCost from '@uniswap/snapshot-gas-cost';
 import { days } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration';
@@ -78,6 +78,7 @@ describe('PrivacyMining', () => {
         const wethRewardPool = await PrivacyMining.getRewardPoolInfo(WETH.address);
 
         expect(wethRewardPool.phase).to.eq(1);
+        expect(wethRewardPool.cycle).to.eq(1);
         expect(wethRewardPool.lastRewardTime).to.eq(timestamp);
         expect(wethRewardPool.allocPoint).to.eq(100);
         expect(wethRewardPool.accRewardPerShare).to.eq(0);
@@ -193,6 +194,7 @@ describe('PrivacyMining', () => {
 
         const rewardPoolInfo_after = await PrivacyMining.getRewardPoolInfo(WETH.address);
 
+        expect(rewardPoolInfo_after.cycle).to.eq(1);
         expect(rewardPoolInfo_after.phase).to.eq(2);
         expect(rewardPoolInfo_after.lastRewardTime).to.eq((await ethers.provider.getBlock(log2.blockNumber)).timestamp);
         expect(rewardPoolInfo_after.allocPoint).to.eq(101);
@@ -996,7 +998,9 @@ describe('PrivacyMining', () => {
       await advanceTime(phaseOneEndTime + 1);
 
       // 3. Let non-owner of PMC make tx to `updateRewardPoolAllocations`
-      await expect(PrivacyMining.updateRewardPoolAllocations(WETH.address, 1, 100)).to.be.revertedWith('UNAUTHORIZED');
+      await expect(PrivacyMining.updateRewardPoolAllocations(WETH.address, 1, 100)).to.be.revertedWith(
+        'Ownable: caller is not the owner'
+      );
     });
 
     it('reverts when allocPoint is updated before rewardPeriod finishes', async () => {
@@ -1037,7 +1041,9 @@ describe('PrivacyMining', () => {
 
       // Expect the WETH rewardPool to be deleted from PMC
       const rewardPoolInfo = await PrivacyMining.getRewardPoolInfo(WETH.address);
+      expect(rewardPoolInfo.cycle).to.eq(1);
       expect(rewardPoolInfo.phase).to.eq(0);
+      expect(rewardPoolInfo.rewardPrecision).to.eq(0);
       expect(rewardPoolInfo.allocPoint).to.eq(0);
       expect(rewardPoolInfo.lastRewardTime).to.eq(0);
       expect(rewardPoolInfo.rewardEndTime).to.eq(0);
@@ -1129,6 +1135,8 @@ describe('PrivacyMining', () => {
       it(`should let a pool recycle back to phase one after phase two is finished`, async () => {
         const { multisig, PrivacyMining, WETH } = await setup();
 
+        expect((await PrivacyMining.getRewardPoolInfo(WETH.address)).cycle).to.eq(0);
+
         // 1. Create WETH reward pool in PMC with 10 `allocPoint`
         await multisig.PrivacyMining.addRewardPool(WETH.address, 1, 10);
 
@@ -1136,8 +1144,12 @@ describe('PrivacyMining', () => {
         const phaseOneEndTime = await (await PrivacyMining.getRewardPoolInfo(WETH.address)).rewardEndTime;
         await advanceTime(phaseOneEndTime + 1);
 
+        expect((await PrivacyMining.getRewardPoolInfo(WETH.address)).cycle).to.eq(1);
+
         // 3. Upgrade the WETH reward pool to phase 2 with 20 `allocPoint`
         await multisig.PrivacyMining.addRewardPool(WETH.address, 2, 20);
+
+        expect((await PrivacyMining.getRewardPoolInfo(WETH.address)).cycle).to.eq(1);
 
         // 4. End the current reward period for WETH reward pool
         const phaseTwoEndTime = await (await PrivacyMining.getRewardPoolInfo(WETH.address)).rewardEndTime;
@@ -1152,6 +1164,7 @@ describe('PrivacyMining', () => {
 
         // 7. Fetch the info of the newly recycled pool and assert
         const rewardPoolInfo_new = await PrivacyMining.getRewardPoolInfo(WETH.address);
+        expect(rewardPoolInfo_new.cycle).to.eq(2);
         expect(rewardPoolInfo_new.phase).to.eq(1);
         expect(rewardPoolInfo_new.allocPoint).to.eq(30);
         expect(rewardPoolInfo_new.globalPoolBalance).to.eq(0);
@@ -1171,6 +1184,9 @@ describe('PrivacyMining', () => {
 
         // 1. Create WETH reward pool in PMC with 10 `allocPoint`
         await multisig.PrivacyMining.addRewardPool(WETH.address, 1, 10);
+
+        expect((await PrivacyMining.getUserPoolInfo(users[0].address, WETH.address)).cycle).to.eq(0);
+
         // 1.1. Let user deposit in the WETH reward pool
         await deployer.WETH.transfer(users[0].address, toUnit(10));
         await users[0].WETH.approve(SMASP.address, toUnit(10));
@@ -1187,6 +1203,7 @@ describe('PrivacyMining', () => {
         const userPoolInfo_phaseOne = await PrivacyMining.getUserPoolInfo(users[0].address, WETH.address);
 
         expect(userPoolInfo_phaseOne.userPoolBalance).to.eq(toUnit(10));
+        expect(userPoolInfo_phaseOne.cycle).to.eq(1);
         expect(userPoolInfo_phaseOne.phase).to.eq(1);
 
         // 4. Upgrade the WETH reward pool to phase 2 with 20 `allocPoint`
@@ -1206,7 +1223,8 @@ describe('PrivacyMining', () => {
         // 7. Fetch the user info w.r.t. the newly recycled pool and assert
         const userPoolInfo_phaseTwo = await PrivacyMining.getUserPoolInfo(users[0].address, WETH.address);
 
-        expect(userPoolInfo_phaseTwo.userPoolBalance).to.eq(toUnit(20).mul(userPoolInfo_phaseOne.userVoucherBalance));
+        expect(userPoolInfo_phaseTwo.userPoolBalance).to.eq(toUnit(20).mul(userPoolInfo_phaseTwo.userVoucherBalance));
+        expect(userPoolInfo_phaseTwo.cycle).to.eq(1);
         expect(userPoolInfo_phaseTwo.phase).to.eq(2);
 
         // 8. Recycle the WETH pool back to phase one
@@ -1221,6 +1239,7 @@ describe('PrivacyMining', () => {
         const userPoolInfo = await PrivacyMining.getUserPoolInfo(users[0].address, WETH.address);
 
         expect(userPoolInfo.userPoolBalance).to.eq(toUnit(1));
+        expect(userPoolInfo.cycle).to.eq(2);
         expect(userPoolInfo.phase).to.eq(1);
         expect(userPoolInfo.userVoucherBalance).to.eq(0);
       });

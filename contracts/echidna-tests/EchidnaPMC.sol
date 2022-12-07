@@ -62,9 +62,6 @@ contract EchidnaPMC {
     if (_assetId > 5) {
       _assetId = 1 + (_assetId % 5);
     }
-    // if (_allocPoint > 255) {
-    //   _allocPoint = 1 + (_allocPoint % 255);
-    // }
     if (_phase > 2) {
       _phase = 1 + (_phase % 2);
     }
@@ -469,6 +466,7 @@ contract EchidnaPMC {
 
     // pre-conditions
     require(rewardPoolInfo.phase == 2);
+    require((privacyMining.getUserPoolInfo(address(this), _assetId)).cycle == rewardPoolInfo.cycle);
     // require(block.timestamp <= rewardPoolInfo.rewardEndTime); // Not needed
     require(rewardPoolInfo.allocPoint != 0);
     require((privacyMining.getUserPoolInfo(address(this), _assetId)).phase == 2);
@@ -520,6 +518,7 @@ contract EchidnaPMC {
     uint8 userPhase = userPoolInfo.phase;
 
     require(poolPhase == userPhase);
+    require(userPoolInfo.cycle == rewardPoolInfo.cycle);
     emit DebugErrUint('poolPhase', poolPhase);
     emit DebugErrUint('userPhase', userPhase);
     emit DebugErrUint('poolAllocPoint', rewardPoolInfo.allocPoint);
@@ -578,6 +577,7 @@ contract EchidnaPMC {
     TestPMC.PhaseInfo memory phaseInfo = privacyMining.getPhaseInfo(rewardPoolInfo.phase);
 
     require(rewardPoolInfo.phase == 1);
+    require(userPoolInfo.cycle == rewardPoolInfo.cycle);
     require(userPoolInfo.phase == 1);
     // require(block.timestamp <= rewardPoolInfo.rewardEndTime); // Not needed
 
@@ -684,4 +684,6 @@ contract EchidnaPMC {
       assert(rewardPoolInfo.allocPoint == 0);
     }
   }
+
+  // 6. Users can only claim rewards from a reward pool if they're in same cycle & phase w.r.t it
 }
