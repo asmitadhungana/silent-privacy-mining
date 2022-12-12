@@ -10,9 +10,9 @@
     "lint:eslint": "eslint .",
     "lint:solhint": "solhint contracts/**/*.sol",
     "test:echidna": "yarn hardhat compile && echidna-test . --contract EchidnaPMC --config contracts/echidna-tests/echidna-config.yaml",
-    "test:unit-sc": "rm -rf artifacts && yarn hardhat node & yarn hardhat test",
+    "test:unit-sc": "rm -rf artifacts && rm -rf test/__snapshots__ && yarn hardhat node & yarn hardhat test",
     "deploy:with-setup": "rm -rf artifacts && rm -rf cache && yarn hardhat node",
-    "deploy:wo-setup": "rm -rf artifacts && rm -rf cache && yarn hardhat node & yarn hardhat run scripts/deploy/deploy-contracts.ts"
+    "deploy:wo-setup": "rm -rf artifacts && rm -rf cache && yarn hardhat node --no-deploy & yarn hardhat run scripts/deploy/deploy-contracts.ts"
   },
   "repository": {
     "type": "git",

@@ -138,6 +138,12 @@ contract TestPMC is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
   // address public immutable SMASP; // NOTE: CHANGE TO ISMASP IN INTEGRATED CONTRACT
 
   /**
+   * @dev Address of the treasury wallet that gets funded with SILENT rewards for PMC
+   * and from which rewards are re-distributed
+   */
+  address public immutable TREASURY;
+
+  /**
    * @dev Maps the phase (1 or 2) to the struct PhaseInfo
    */
   mapping(uint256 => PhaseInfo) internal phaseInfo;
@@ -162,12 +168,14 @@ contract TestPMC is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
    * Requirements:
    * `_silentToken` and `_smaspContract` cannot be the zero address
    */
-  constructor(address _silentToken, address _smaspContract) {
+  constructor(address _silentToken, address _smaspContract, address _treasury) {
     require(_silentToken != address(0));
     // require(_smaspContract != address(0));
+    require(_treasury != address(0));
 
     SILENT = IERC20(_silentToken);
     // SMASP = _smaspContract; // NOTE: CHANGE TO ISMASP IN INTEGRATED CONTRACT
+    TREASURY = _treasury;
   }
 
   /* ========== MODIFIERS ========== */
@@ -280,7 +288,6 @@ contract TestPMC is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
    *
    * If user is entering phase 2:
    * - the UserPoolInfo.phase is changed to 2
-   * - the UserPoolInfo.userVoucherBalance from phase 1 is divided by 1e18
    * - all other variables from UserPoolInfo in userPoolInfo mapping w.r.t reward pool
    *   are reset to zero values
    *
@@ -442,8 +449,10 @@ contract TestPMC is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
       FullMath.mulDiv(_amount, rewardPool_memory.accRewardPerShare, 10 ** rewardPool_memory.rewardPrecision)
     );
 
+    // Update globalPoolBalance
     rewardPoolInfo[_assetId].globalPoolBalance += _amount;
 
+    // Update globalPoolBalance
     emit LogDepositToPool({user: _user, assetId: _assetId, amount: _amount});
   }
 
@@ -650,18 +659,18 @@ contract TestPMC is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
     uint256 userPendingRewardSinceLastClaimedBlock = (userAccumulatedRewardSinceGenesis -
       userPoolInfo_storage.rewardDebt).toUint256();
 
+    // Update the user's reward debt
     userPoolInfo_storage.rewardDebt = userAccumulatedRewardSinceGenesis;
 
     // If the pending reward is > 0, transfer it to the user
     if (userPendingRewardSinceLastClaimedBlock != 0) {
       if (rewardPool_memory.phase == 2) {
-        SILENT.safeTransfer(msg.sender, userPendingRewardSinceLastClaimedBlock);
+        SILENT.safeTransferFrom(TREASURY, msg.sender, userPendingRewardSinceLastClaimedBlock);
       } else if (rewardPool_memory.phase == 1) {
         userPoolInfo_storage.userVoucherBalance += uint240(userPendingRewardSinceLastClaimedBlock);
       }
+      emit LogRewardPaidByPool({assetId: _assetId, user: msg.sender, amount: userPendingRewardSinceLastClaimedBlock});
     }
-
-    emit LogRewardPaidByPool({assetId: _assetId, user: msg.sender, amount: userPendingRewardSinceLastClaimedBlock});
   }
 
   /* ========== OWNER RESTRICTED FUNCTIONS ========== */
@@ -785,9 +794,9 @@ contract TestPMC is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
       // If the _phase is 2
       if (_phase == 2) {
         // Delete the reward pool variables except for cycle
+        // allocPoint has already been updated to zero before
         rewardPool_storage.phase = 0;
         rewardPool_storage.rewardPrecision = 0;
-        rewardPool_storage.allocPoint = 0;
         rewardPool_storage.rewardStartTime = 0;
         rewardPool_storage.lastRewardTime = 0;
         rewardPool_storage.rewardEndTime = 0;

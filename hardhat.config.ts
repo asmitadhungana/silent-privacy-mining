@@ -58,6 +58,10 @@ const config: HardhatUserConfig = {
     multisig: {
       default: 1, // here this will by default take the second account as onwer/multisig (so in the test this will be a different account than the deployer)
       1: '' // on the mainnet the owner will be our multisig contract
+    },
+    treasury: {
+      default: 2,
+      1: ''
     }
   }
 };

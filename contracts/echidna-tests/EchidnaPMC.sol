@@ -41,18 +41,22 @@ contract EchidnaPMC {
   // or allocPoint of any of its existing reward pools being updated
   mapping(uint256 => uint256) private lastTimeTotalAllocChanged;
 
+  // treasury account for PMC
+  address immutable private _TREASURY;
+
   /** SETUP */
   constructor() {
     // Create the SilentToken
     silentToken = new MockERC20('Silent', 'SILENT');
-
+    // Set treasury to be the echidna_caller
+    _TREASURY = msg.sender;
     // Create the PrivacyMining contract
-    privacyMining = new TestPMC(address(silentToken), address(0));
+    privacyMining = new TestPMC(address(silentToken), address(0), msg.sender);
 
     // Mint Silent tokens to this contract
     silentToken.mint(address(this), type(uint128).max);
-    // Mint Silent tokens to PMC for rewards distribution
-    silentToken.mint(address(privacyMining), type(uint128).max);
+    // Mint Silent tokens to treasury for rewards distribution
+    silentToken.mint(msg.sender, type(uint128).max);
     // Set the reward emission rate of the two phases in PMC
     privacyMining.setRewardEmissionRate(1, 1 ether);
     privacyMining.setRewardEmissionRate(2, 1 ether);
@@ -472,16 +476,16 @@ contract EchidnaPMC {
     require((privacyMining.getUserPoolInfo(address(this), _assetId)).phase == 2);
 
     uint256 userSilentBalance_before = silentToken.balanceOf(address(this));
-    uint256 pmcSilentBalance_before = silentToken.balanceOf(address(privacyMining));
+    uint256 treasurySilentBalance_before = silentToken.balanceOf(_TREASURY);
 
     // action
     try privacyMining.claimRewardsFromPool(_assetId) {
-      uint256 pmcSilentBalance_after = silentToken.balanceOf(address(privacyMining));
+      uint256 treasurySilentBalance_after = silentToken.balanceOf(_TREASURY);
       uint256 userSilentBalance_after = silentToken.balanceOf(address(this));
 
       // Error logs
       emit DebugErrUint('userSilentBalance_change', userSilentBalance_after - userSilentBalance_before);
-      emit DebugErrUint('pmcSilentBalance_change', pmcSilentBalance_before - pmcSilentBalance_after);
+      emit DebugErrUint('treasurySilentBalance_change', treasurySilentBalance_before - treasurySilentBalance_after);
       emit DebugErrUint('maxPoolSilentAllocation', maxRewardsDistributed[_assetId][2]);
 
       // Update the max claimed rewards for the reward pool by the user
@@ -496,7 +500,7 @@ contract EchidnaPMC {
             lastTimeTotalAllocChanged[rewardPoolInfo.phase])) / phaseInfo.totalAllocPoint);
 
       // post-conditions
-      assert(userSilentBalance_after - userSilentBalance_before == pmcSilentBalance_before - pmcSilentBalance_after);
+      assert(userSilentBalance_after - userSilentBalance_before == treasurySilentBalance_before - treasurySilentBalance_after);
       assert(maxRewardsClaimed[_assetId][2] <= maxRewardsDistributed[_assetId][2]);
     } catch (bytes memory err) {
       emit LogErr(err);
@@ -529,7 +533,7 @@ contract EchidnaPMC {
       userRewardsBalance_before = userPoolInfo.userVoucherBalance;
     } else {
       userRewardsBalance_before = silentToken.balanceOf(address(this));
-      require(silentToken.balanceOf(address(privacyMining)) > maxRewardsDistributed[_assetId][2]);
+      require(silentToken.balanceOf(address(_TREASURY)) > maxRewardsDistributed[_assetId][2]);
     }
 
     try privacyMining.claimRewardsFromPool(_assetId) {
@@ -684,6 +688,4 @@ contract EchidnaPMC {
       assert(rewardPoolInfo.allocPoint == 0);
     }
   }
-
-  // 6. Users can only claim rewards from a reward pool if they're in same cycle & phase w.r.t it
 }

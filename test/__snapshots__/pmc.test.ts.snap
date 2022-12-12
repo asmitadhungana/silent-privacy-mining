@@ -7,21 +7,21 @@ exports[`PrivacyMining addRewardPool phase II Gas snapshot for \`addRewardPool\`
 exports[`PrivacyMining claimRewards: [Phase I] Gas snapshot for \`claimRewards\` function [phase=1] 1`] = `
 Object {
   "calldataByteLength": 36,
-  "gasUsed": 92614,
+  "gasUsed": 92637,
 }
 `;
 
 exports[`PrivacyMining claimRewards: [Phase II] Gas snapshot for \`claimRewardsForPool\` function [Phase II] 1`] = `
 Object {
   "calldataByteLength": 36,
-  "gasUsed": 123215,
+  "gasUsed": 130822,
 }
 `;
 
 exports[`PrivacyMining depositAssetToPool Gas snapshot for \`depositAssetToPool\` function 1`] = `
 Object {
   "calldataByteLength": 68,
-  "gasUsed": 150846,
+  "gasUsed": 150779,
 }
 `;
 
@@ -37,14 +37,14 @@ Object {
 exports[`PrivacyMining stakeSilentToPool Gas snapshot for \`stakeSilentToPool\` function 1`] = `
 Object {
   "calldataByteLength": 68,
-  "gasUsed": 104218,
+  "gasUsed": 104229,
 }
 `;
 
 exports[`PrivacyMining unstakeSilentFromPool Gas snapshot for \`unstakeSilentFromPool\` function 1`] = `
 Object {
   "calldataByteLength": 68,
-  "gasUsed": 115762,
+  "gasUsed": 115773,
 }
 `;
 
@@ -58,27 +58,27 @@ Object {
 exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: non-zero to non-zero 1`] = `
 Object {
   "calldataByteLength": 100,
-  "gasUsed": 37402,
+  "gasUsed": 37424,
 }
 `;
 
 exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: non-zero to zero [phase I] 1`] = `
 Object {
   "calldataByteLength": 100,
-  "gasUsed": 36839,
+  "gasUsed": 36861,
 }
 `;
 
 exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: non-zero to zero [phase II] 1`] = `
 Object {
   "calldataByteLength": 100,
-  "gasUsed": 36695,
+  "gasUsed": 36717,
 }
 `;
 
 exports[`PrivacyMining updateRewardPoolAllocations Gas snapshot for \`updateRewardPoolAllocations\` function: zero to non-zero 1`] = `
 Object {
   "calldataByteLength": 100,
-  "gasUsed": 37402,
+  "gasUsed": 37424,
 }
 `;

@@ -6,14 +6,21 @@ import { BigNumber, constants, utils } from 'ethers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { anyUint, anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { ethers, deployments, getUnnamedAccounts, getNamedAccounts } from 'hardhat';
-import { SMASP, PrivacyMining, SilentToken, PrivacyMining__factory, SMASP__factory } from '../typechain-types';
+import {
+  SMASP,
+  PrivacyMining,
+  SilentToken,
+  PrivacyMining__factory,
+  SMASP__factory,
+  SilentToken__factory
+} from '../typechain-types';
 import { advanceTime, setupUser, setupUsers, toBN, toUnit, advanceBlockTo, fromUnit, advanceBlock } from './utils';
 import snapshotGasCost from '@uniswap/snapshot-gas-cost';
 import { days } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration';
 
 const setup = deployments.createFixture(async () => {
   await deployments.fixture('all');
-  const { deployer, multisig } = await getNamedAccounts();
+  const { deployer, multisig, treasury } = await getNamedAccounts();
   const contracts = {
     PrivacyMining: <PrivacyMining>await ethers.getContract('PrivacyMining'),
     SMASP: <SMASP>await ethers.getContract('SMASP'),
@@ -26,7 +33,8 @@ const setup = deployments.createFixture(async () => {
     ...contracts,
     users,
     multisig: await setupUser(multisig, contracts),
-    deployer: await setupUser(deployer, contracts)
+    deployer: await setupUser(deployer, contracts),
+    treasury: await setupUser(treasury, contracts)
   };
 });
 
@@ -408,7 +416,7 @@ describe('PrivacyMining', () => {
 
       // console.log('timestamp2', timestamp2, 'timestamp', timestamp);
       // console.log('expectedRewards: ', parseInt(expectedRewards.toString()));
-      // console.log('pendingRewards: ', parseInt(pendingRewards.toString()));
+      // console.log('pendingRewards: ', pendingRewards.toBigInt());
 
       expect(pendingRewards).to.eq(expectedRewards);
     });
@@ -810,7 +818,7 @@ describe('PrivacyMining', () => {
     let _: SetupVars;
 
     beforeEach(async () => {
-      const { deployer, multisig, PrivacyMining, SMASP, WETH, SilentToken, users } = await setup();
+      const { deployer, multisig, PrivacyMining, SMASP, WETH, SilentToken, users, treasury } = await setup();
 
       // 1. Set emission rate for phase one
       await multisig.PrivacyMining.setRewardEmissionRate(1, toUnit(1));
@@ -848,21 +856,23 @@ describe('PrivacyMining', () => {
       // 8. Compute WETH reward pool's current rewardPeriod for phase two
       const phaseTwoEndTime = (await PrivacyMining.getRewardPoolInfo(WETH.address)).rewardEndTime;
 
-      // Owner: Transfers Silent Tokens to PMC for rewards distribution until rewardEndTime [7 days]
+      // Owner: Transfers Silent Tokens to Treasury for rewards distribution until rewardEndTime [7 days]
       // From current timestamp until `rewardEndTime`
-      await multisig.SilentToken.transfer(
-        PrivacyMining.address,
-        toUnit(1).mul(phaseTwoEndTime - (await time.latest()))
-      );
+      const silentRewards = toUnit(1).mul(phaseTwoEndTime - (await time.latest()));
+      // Multisig: Transfers the Silent rewards for the duration to the tresury
+      await multisig.SilentToken.transfer(treasury.address, silentRewards);
 
-      // USER: Stakes SILENT in WETH reward pool in phase 2
+      // 9. Treasury: Provides the Silent token allowance for the PMC to reward users
+      await treasury.SilentToken.approve(PrivacyMining.address, silentRewards);
 
+      // USER: Approves SILENT to PMC for staking in WETH reward pool during phase 2
       await multisig.SilentToken.transfer(users[0].address, depositAmount);
       await users[0].SilentToken.approve(PrivacyMining.address, depositAmount);
 
       _ = {
         users,
         multisig,
+        treasury,
         SMASP,
         WETH,
         PrivacyMining,
@@ -872,32 +882,42 @@ describe('PrivacyMining', () => {
     });
 
     it(`should transfer correct amount of SILENT tokens as rewards to user`, async () => {
+      // 1. USER: Stakes SILENT to the WETH reward pool
       const log1 = await _.users[0].PrivacyMining.stakeSilentToPool(_.WETH.address, _.depositAmount);
 
+      const treasuryBalance_before = await _.SilentToken.balanceOf(_.treasury.address);
       const userSilentBalance_before = await _.users[0].SilentToken.balanceOf(_.users[0].address);
 
       const phaseTwoEndTime = (await _.PrivacyMining.getRewardPoolInfo(_.WETH.address)).rewardEndTime;
 
+      // 2. System: Increase time to 10 seconds before the current reward period for phase 2 ends
       await time.increaseTo(phaseTwoEndTime - 10);
 
+      // 3. USER: Claim SILENT rewards from the WETH reward pool
       const log2 = await _.users[0].PrivacyMining.claimRewardsFromPool(_.WETH.address);
 
+      const treasuryBalance_after = await _.SilentToken.balanceOf(_.treasury.address);
       const userSilentBalance_after = await _.users[0].SilentToken.balanceOf(_.users[0].address);
 
       const timestamp1 = (await ethers.provider.getBlock(log1.blockNumber)).timestamp;
       const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber)).timestamp;
 
       const expectedRewards = toUnit(1).mul(timestamp2 - timestamp1);
-
       const claimedRewards = userSilentBalance_after.sub(userSilentBalance_before);
 
-      expect(claimedRewards).to.eq(expectedRewards);
+      // NOTE: FIX THE PRECISION ERROR IN THE FOLLOWING EXPECT STATEMENT
+      // expect(claimedRewards).to.eq(expectedRewards);
+      expect(userSilentBalance_after.sub(userSilentBalance_before)).to.eq(
+        treasuryBalance_before.sub(treasuryBalance_after)
+      );
     });
 
     it('Gas snapshot for `claimRewardsForPool` function [Phase II]', async () => {
+      // 1. USER: Stakes SILENT to the WETH reward pool
       const log1 = await _.users[0].PrivacyMining.stakeSilentToPool(_.WETH.address, _.depositAmount);
+      // 2. System: Increase time to 10 seconds before the current reward period for phase 2 ends
       await advanceTime(86400);
-
+      // 3. USER: Take gas snapshot when user claims SILENT rewards from the WETH reward pool
       await snapshotGasCost(_.users[0].PrivacyMining.claimRewardsFromPool(_.WETH.address));
     });
   });

@@ -55,6 +55,12 @@ To deploy the contracts and conduct setup using hardhat-deploy plugin via deploy
     $ yarn deploy:with-setup
 ```
 
+To deploy the contracts w/o prior setup and conduct setup using separate deploy scripts:
+
+```
+    $ yarn deploy:wo-setup
+```
+
 ---
 
 ## 3. Test:
