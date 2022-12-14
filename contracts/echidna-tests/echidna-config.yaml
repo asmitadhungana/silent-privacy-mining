@@ -1,0 +1,6 @@
+# set testMode to assertion mode
+testMode: assertion
+# set corpusDir to track coverage
+corpusDir: corpus
+# set estimateGas to estimate gas
+estimateGas: true

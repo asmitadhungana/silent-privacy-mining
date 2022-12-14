@@ -1,0 +1,768 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_silentToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_smaspContract",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "IneligibleUser",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "assumedPhase",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "correctPhase",
+          "type": "uint256"
+        }
+      ],
+      "name": "InvalidPhase",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogDepositToPool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogRewardPaidByPool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "phase",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "allocPoint",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogRewardPoolAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogSilentStakedToPool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogSilentUnstakedFromPool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "lastRewardTime",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "globalPoolBalance",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "accRewardPerShare",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogUpdatePoolRewards",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "phase",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "rewardPerSecond",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogUpdateRewardEmissionRate",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "allocPoint",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogUpdateRewardPool",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Unpaused",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "SILENT",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "SMASP",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_phase",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_allocPoint",
+          "type": "uint256"
+        }
+      ],
+      "name": "addRewardPool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        }
+      ],
+      "name": "claimRewardsFromPool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "deployedPools",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "depositAssetToPool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getPendingRewards",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "pending",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getRewardPoolInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint8",
+              "name": "phase",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint64",
+              "name": "lastRewardTime",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "allocPoint",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "accRewardPerShare",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "globalPoolBalance",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PrivacyMining.RewardPool",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "_assetIds",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_phase",
+          "type": "uint256"
+        }
+      ],
+      "name": "massUpdatePoolRewardVariables",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "phaseToRewardEmissionRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "phaseToTotalAllocPoint",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "rewardPoolInfo",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "phase",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint64",
+          "name": "lastRewardTime",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "allocPoint",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "accRewardPerShare",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "globalPoolBalance",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_phase",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rewardEmissionRate",
+          "type": "uint256"
+        }
+      ],
+      "name": "setRewardEmissionRate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "stakeSilentToPool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "unstakeSilentFromPool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        }
+      ],
+      "name": "updatePoolRewardVariables",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint8",
+              "name": "phase",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint64",
+              "name": "lastRewardTime",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "allocPoint",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "accRewardPerShare",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "globalPoolBalance",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PrivacyMining.RewardPool",
+          "name": "rewardPool_memory",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_phase",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_newAllocPoint",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateRewardPoolAllocations",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "userPoolInfo",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "phase",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint248",
+          "name": "userVoucherBalance",
+          "type": "uint248"
+        },
+        {
+          "internalType": "uint256",
+          "name": "userPoolBalance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "int256",
+          "name": "rewardDebt",
+          "type": "int256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "address": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+}

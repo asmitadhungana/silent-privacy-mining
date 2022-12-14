@@ -1,11 +1,45 @@
-node_modules
+
+# Env
 .env
-coverage
+
+# Node JS
+node_modules
+yarn-error.log
+
+# Coverage
+coverage*
 coverage.json
+
+# Typechain
 typechain
 typechain-types
 
-#Hardhat files
-cache
+# Hardhat
 artifacts
+cache
+gasReporterOutput.json
+
+# VS Code
+vscode-user-settings.json
+vscode-workspace-settings.json
+
+# System
+.DS_Store
+
+# Echidna
+corpus
+crytic-export
+setup.json
+
+# Deployments: Hardhat-deploy
+deployments/hardhat
+deployments/localhost
+
+
+
+
+
+
+
+
 

@@ -3,36 +3,34 @@ pragma solidity ^0.8.4;
 
 /// @dev Interface of Silent Protocol's PrivacyMining contract
 interface IPrivacyMining {
-    /// @dev Emitted when `reward` amount of vouchers/Silent tokens are added to the PMC contract
-    /// for distribution during phase 1 or phase 2 of a reward pool corresponding to `assetId`
-    event RewardAdded(uint256 indexed _assetId, uint256 reward);
+    event LogUpdateRewardPool(uint256 assetId, uint256 allocPoint);
+    event LogUpdateRewardEmissionRate(uint256 phase, uint256 rewardPerSecond);
 
-    /// @dev Emitted when the UserPoolState.phase of `user` is updated to 2 from 1 for a reward pool
-    /// corresponding to `assetId` on his/her first stake to the reward pool
-    event UserEntersPhaseTwo(address indexed user, uint256 indexed _assetId);
-
-    /// @dev Emitted when a `user` claims pending `reward` from a reward pool corresponding to `assetId`
-    event RewardPaid(
-        address indexed user,
-        uint256 indexed _assetId,
-        uint256 reward
+    event LogDepositToPool(address user, uint256 assetId, uint256 amount);
+    event LogSilentStakedToPool(address user, uint256 assetId, uint256 amount);
+    event LogSilentUnstakedFromPool(
+        address user,
+        uint256 assetId,
+        uint256 amount
+    );
+    event LogRewardPaidByPool(uint256 assetId, address user, uint256 indexed amount);
+    event LogRewardPoolAdded(
+        uint256 assetId,
+        uint256 phase,
+        uint256 allocPoint
     );
 
-    /// @dev Emitted a `user` successfully calls any of the four mutating external functions in PMC
-    /// thus updating the balance of the reward pool for `assetId` by `amount`.
-    ///
-    /// @param added is used to indicate wheather the `amount` was added to the pool or deducted from the pool.
-    event PoolBalanceChanged(
-        address user,
-        uint256 indexed _assetId,
-        bool indexed added,
-        uint256 amount
+    event LogUpdatePoolRewards(
+        uint256 assetId,
+        uint256 lastRewardTime,
+        uint256 globalPoolBalance,
+        uint256 accRewardPerShare
     );
 
     /// @dev Registers into PMC whenever a deposit of `amount` is made by `user`in SMASP to an asset pool
     /// represented by its `assetId` with a reward pool deployed and currently in phase 1 in PMC.
     ///
-    /// Emits a {PoolBalanceChanged} event
+    /// Emits a {LogDepositToPool} event
     function depositAssetToPool(
         address user,
         uint256 _assetId,
@@ -44,7 +42,7 @@ interface IPrivacyMining {
     ///
     /// It increments the pool balance of user and the pool's globalPoolBalance based on `amount`
     ///
-    /// Emits a {PoolBalanceChanged} event indicating the updated balance
+    /// Emits a {LogSilentStakedToPool} event indicating the updated balance
     function stakeSilentToPool(uint256 _assetId, uint256 amount) external;
 
     /// @dev Lets a user unstake `amount` Silent tokens from a reward pool for `assetId`
@@ -52,7 +50,7 @@ interface IPrivacyMining {
     ///
     /// It decrements the pool balance of user and the pool's globalPoolBalance based on `amount`
     ///
-    /// Emits a {PoolBalanceChanged} event indicating the updated balance
+    /// Emits a {LogSilentUnstakedFromPool} event indicating the updated balance
     function unstakeSilentFromPool(uint256 _assetId, uint256 amount) external;
 
     /// @dev Lets a user claim its pending rewards of reward from a reward pool for `assetId`
@@ -61,6 +59,6 @@ interface IPrivacyMining {
     /// It updates (decrements) the Silent token balance of PMC in phase 2 of the reward pool
     /// upon a successful call made by a user with pending rewards > 0.
     ///
-    /// Emits a {PoolBalanceChanged} event indicating the updated balance
-    function claimRewards(uint256 _assetId) external;
+    /// Emits a {LogRewardPaidByPool} event indicating the updated balance
+    function claimRewardsFromPool(uint256 _assetId) external;
 }

@@ -1,31 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./libraries/Math.sol";
-import "./libraries/SafeERC20.sol";
-import "./interfaces/IPrivacyMining.sol";
-import "hardhat/console.sol";
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {ReentrancyGuard} from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import {Pausable} from '@openzeppelin/contracts/security/Pausable.sol';
+import {SafeERC20, IERC20} from './libraries/SafeERC20.sol';
+import {IPrivacyMining} from './interfaces/IPrivacyMining.sol';
+import {SafeCast} from './libraries/SafeCast.sol';
+import {FullMath} from './libraries/FullMath.sol';
+import {Math} from './libraries/Math.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev the interface for the Silent Multi Asset Shielded Pool contract
  */
 interface ISMASP {
-    function assetIdToToken(uint256) external returns (address);
+  function assetIdToToken(uint256) external returns (address);
 }
-
-/**
- * @dev Thrown when the deposit/stake functions are called after
- * reward period for the pool finishes
- */
-error RewardPeriodFinished();
 
 /**
  * @dev Thrown when a function is accessed during the wrong phase
  */
-error InvalidPhase(uint256 _assetId, uint8 assumedPhase, uint8 correctPhase);
+error InvalidPhase(uint256 assetId, uint256 assumedPhase, uint256 correctPhase);
 
 /**
  * @dev Thrown when the amount passed to a function is ZERO or invalid
@@ -33,10 +29,22 @@ error InvalidPhase(uint256 _assetId, uint8 assumedPhase, uint8 correctPhase);
 error InvalidAmount();
 
 /**
- * @dev Thrown when a user inelligible to participate in a given reward
+ * @dev Thrown when a user ineligible to participate in a given reward
  * pool accesses a mutable function
  */
-error IneligibleUser();
+error IneligibleUser(uint256 assetId, address user);
+
+/**
+ * @dev Thrown when the deposit/stake functions are called upon a
+ * reward pool after it's reward period has ended
+ */
+error RewardPeriodFinished(uint256 assetId, uint256 currentTimestamp, uint256 rewardEndTimestamp);
+
+/**
+ * @dev Thrown when the pool is upgraded (phase/allocPoint) when its
+ * exisiting reward period is ongoing
+ */
+error RewardPeriodOngoing(uint256 assetId, uint256 currentTimestamp, uint256 rewardEndTimestamp);
 
 /**
  * @dev Implementation of the {IPrivacyMining} interface
@@ -44,624 +52,707 @@ error IneligibleUser();
  * all the asset pools deployed in the SMASP
  *
  * All the shielded asset pools in SMASP will have a corresponding
- * reward pools in PrivacyMining contract, identified by their "assetId"s
+ * reward pools in PrivacyMining contract, identified by their `assetId`s
  *
  * Each reward pool will run in two phases:
  * In Phase I: Virtualtokens called vouchers will be distributed
  * In Phase II : Silent tokens will be distributed as rewards
  */
 contract PrivacyMining is IPrivacyMining, ReentrancyGuard, Pausable, Ownable {
-    using SafeERC20 for IERC20;
+  using SafeERC20 for IERC20;
+  using SafeCast for uint256;
+  using SafeCast for int256;
 
-    /* ========== STATE VARIABLES ========== */
+  /* ========== STATE VARIABLES ========== */
 
-    /**
-     * @dev Silent token contract Instance
-     */
-    IERC20 public immutable silentToken;
+  /**
+   * @dev This struct stores the information of the
+   * global variables of each of the two phases
+   *
+   * @param rewardEmissionRate: reward emission rate (per second)
+   * @param totalAllocPoint: total allocation of all reward pools in phase
+   */
+  struct PhaseInfo {
+    uint128 totalAllocPoint;
+    uint128 rewardEmissionRate;
+  }
 
-    /**
-     * @dev Address of the SMASP contract
-     */
-    address public immutable smaspContract;
+  /**
+   * @dev This struct stores the information of all the
+   * reward pools in the privacy mining program
+   */
+  struct RewardPool {
+    uint8 cycle;
+    uint8 phase;
+    uint8 rewardPrecision;
+    uint8 allocPoint;
+    uint40 rewardStartTime;
+    uint40 lastRewardTime;
+    uint40 rewardEndTime;
+    uint256 accRewardPerShare;
+    uint256 globalPoolBalance;
+  }
 
-    /**
-     * @dev Address of the rewardsDistributor
-     * No implementation is made in the current iteration
-     * It may be best initialized according to reward pools
-     */
-    address public immutable rewardsDistributor;
+  /**
+   * @dev This struct stores the information of user's state
+   * in each RewardPool the user partipates in
+   */
+  struct UserPoolInfo {
+    uint8 cycle;
+    uint8 phase;
+    uint240 userVoucherBalance;
+    uint256 userPoolBalance;
+    int256 rewardDebt;
+  }
 
-    /**
-     * @dev This struct stores the information of all the
-     * reward pools in the privacy mining program
-     */
-    struct RewardPool {
-        uint8 phase;
-        uint48 rewardsDuration;
-        uint48 periodFinish;
-        uint48 lastUpdateTime;
-        uint256 rewardRate;
-        uint256 rewardPerTokenStored;
-        uint256 globalPoolBalance; // non-compressible
+  /**
+   * @dev Stores the reward period for reward pools in both the phases
+   */
+  uint256 private constant GLOBAL_REWARD_PERIOD = 7 days;
+
+  /**
+   * @dev Stores the precision points for Voucher virtual tokens
+   */
+  uint256 private constant ACC_VOUCHER_PRECISION = 18;
+
+  /**
+   * @dev Stores the precision points for SILENT token
+   */
+  uint256 private constant ACC_SILENT_PRECISION = 18;
+
+  /**
+   * @dev Silent token contract Instance
+   */
+  IERC20 public immutable SILENT;
+
+  /**
+   * @dev Address of the SMASP contract
+   */
+  address public immutable SMASP; // NOTE: CHANGE TO ISMASP IN INTEGRATED CONTRACT
+
+  /**
+   * @dev Address of the treasury wallet that gets funded with SILENT rewards for PMC
+   * and from which rewards are re-distributed
+   */
+  address public immutable TREASURY;
+
+  /**
+   * @dev Maps the phase (1 or 2) to the struct PhaseInfo
+   */
+  mapping(uint256 => PhaseInfo) internal phaseInfo;
+
+  /**
+   * @dev Maps the assetId of an asset to the struct RewardPool
+   */
+  mapping(uint256 => RewardPool) internal rewardPoolInfo;
+
+  /**
+   * @dev Maps a user address and assetId to the struct UserPoolInfo
+   * Used for storing user's state information w.r.t. the reward pool for `assetId`
+   */
+  mapping(address => mapping(uint256 => UserPoolInfo)) internal userPoolInfo;
+
+  /* ========== CONSTRUCTOR ========== */
+
+  /**
+   * @dev Sets the values for {SILENT} token and {SMASP} contract
+   * Both of these values are immutable: they can only be set once during construction
+   *
+   * Requirements:
+   * `_silentToken` and `_smaspContract` cannot be the zero address
+   */
+  constructor(address _silentToken, address _smaspContract, address _treasury) {
+    require(_silentToken != address(0));
+    require(_smaspContract != address(0));
+    require(_treasury != address(0));
+
+    SILENT = IERC20(_silentToken);
+    SMASP = _smaspContract; // NOTE: CHANGE TO ISMASP IN INTEGRATED CONTRACT
+    TREASURY = _treasury;
+  }
+
+  /* ========== MODIFIERS ========== */
+
+  /**
+   * @dev Checks if the reward pool for the given `_assetId` is in given `_phase`
+   */
+  modifier onlyValidPhase(uint256 _assetId, uint256 _phase) {
+    uint256 rewardPoolPhase = rewardPoolInfo[_assetId].phase;
+    if (rewardPoolPhase != _phase)
+      revert InvalidPhase({assetId: _assetId, assumedPhase: _phase, correctPhase: rewardPoolPhase});
+    _;
+  }
+
+  /**
+   * @dev Checks if the reward period for the given `_assetId` has already finished
+   */
+  modifier beforePeriodFinished(uint256 _assetId) {
+    if (block.timestamp > rewardPoolInfo[_assetId].rewardEndTime)
+      revert RewardPeriodFinished({
+        assetId: _assetId,
+        currentTimestamp: block.timestamp,
+        rewardEndTimestamp: rewardPoolInfo[_assetId].rewardEndTime
+      });
+    _;
+  }
+
+  /* ========== EXTERNAL VIEW FUNCTIONS ========== */
+
+  /**
+   * @dev Fetches the information of an asset reward pool in PMC
+   * @param _assetId: Asset id of asset reward pool in SMASP
+   */
+  function getRewardPoolInfo(uint256 _assetId) external view returns (RewardPool memory) {
+    return rewardPoolInfo[_assetId];
+  }
+
+  /**
+   * @dev Fetches the current phase of a reward pool in PMC
+   * @param _assetId: Asset id of asset reward pool in SMASP
+   */
+  function getRewardPoolPhase(uint256 _assetId) external view returns (uint256) {
+    return uint256(rewardPoolInfo[_assetId].phase);
+  }
+
+  /**
+   * @dev Fetches the information of a user w.r.t. a reward pool in PMC
+   * @param _user: Address of an user
+   * @param _assetId: Asset id of asset reward pool in SMASP
+   */
+  function getUserPoolInfo(address _user, uint256 _assetId) external view returns (UserPoolInfo memory) {
+    return userPoolInfo[_user][_assetId];
+  }
+
+  /**
+   * @dev Fetches the state of a phase in PMC
+   * @param _phase: Phase number(1 or 2) in PMC
+   */
+  function getPhaseInfo(uint256 _phase) external view returns (PhaseInfo memory) {
+    return phaseInfo[_phase];
+  }
+
+  /**
+   * @dev Fetches the pending rewards of a user w.r.t. a reward pool
+   * @param _assetId: Asset id of asset reward pool in SMASP
+   * @param _user: Address of an user
+   */
+  function getPendingRewards(uint256 _assetId, address _user) external view returns (uint256 pending) {
+    // Require user and rewardPool to be in the same phase
+    RewardPool memory rewardPool_memory = rewardPoolInfo[_assetId];
+    UserPoolInfo memory userPoolInfo_memory = userPoolInfo[_user][_assetId];
+
+    if (userPoolInfo_memory.cycle != rewardPool_memory.cycle) revert IneligibleUser({assetId: _assetId, user: _user});
+
+    if (userPoolInfo_memory.phase != rewardPool_memory.phase)
+      revert InvalidPhase({
+        assetId: _assetId,
+        assumedPhase: userPoolInfo_memory.phase,
+        correctPhase: rewardPool_memory.phase
+      });
+
+    uint256 poolAccRewardPerShare = rewardPool_memory.accRewardPerShare;
+
+    // Compute the accRewardPerShare for the pool
+    if (block.timestamp > rewardPool_memory.lastRewardTime) {
+      poolAccRewardPerShare = accRewardPerShare(rewardPool_memory);
     }
 
-    /**
-     * @dev Maps the assetId of an asset to its RewardPool data
-     */
-    mapping(uint256 => RewardPool) public rewardForPool;
+    // Compute and return the user's pending reward
+    pending = (int256(
+      FullMath.mulDiv(
+        userPoolInfo_memory.userPoolBalance,
+        poolAccRewardPerShare,
+        (10 ** rewardPool_memory.rewardPrecision)
+      )
+    ) - userPoolInfo_memory.rewardDebt).toUint256();
+  }
 
-    /**
-     * @dev Stores the assetIds of all reward pools ever deployed
-     */
-    uint256[] public deployedPools;
+  /* ========== INTERNAL FUNCTIONS ========== */
 
-    /**
-     * @dev This struct stores the information of user's state
-     * in each RewardPool the user partipates in
-     */
-    struct UserPoolState {
-        uint248 userPoolVoucherBalance;
-        uint8 phase;
-        uint256 userPoolRewardPerTokenPaid; // compressible
-        uint256 userPoolAccumulatedRewards; // compressible [dependent upon voucher/silent total supply]
-        uint256 userPoolBalance; // non-compressible
+  /**
+   * @dev Registers a user in Phase two of a reward pool
+   * @param userPoolInfo_storage: UserPoolInfo for user for the pool
+   *
+   * If user is entering phase 1:
+   * - the UserPoolInfo.phase is changed to 1
+   * - all other variables from UserPoolInfo in userPoolInfo mapping w.r.t reward pool
+   *   are reset to zero values
+   *
+   * If user is entering phase 2:
+   * - the UserPoolInfo.phase is changed to 2
+   * - all other variables from UserPoolInfo in userPoolInfo mapping w.r.t reward pool
+   *   are reset to zero values
+   *
+   */
+  function _enterPhase(UserPoolInfo storage userPoolInfo_storage, uint256 _phase) internal {
+    userPoolInfo_storage.userPoolBalance = 0;
+    userPoolInfo_storage.rewardDebt = 0;
+    userPoolInfo_storage.phase = uint8(_phase);
+    if (_phase == 1) {
+      userPoolInfo_storage.userVoucherBalance = 0;
+    }
+  }
+
+  /**
+   * @dev Computes the last reward claimable time for a reward pool
+   * @param _rewardEndTime: RewardPool.rewardEndTime of the reward Pool
+   */
+  function lastRewardApplicableTime(uint40 _rewardEndTime) public view returns (uint256) {
+    return Math.min(block.timestamp, uint256(_rewardEndTime));
+  }
+
+  /**
+   * @dev Computes the accumulated reward per share/token of a reward pool
+   * since last reward distribution time to the current timestamp and adds it to
+   * the accumulatedRewardPerShare of the reward pool since genesis
+   *
+   * @param _rewardPool_memory: Memory reference of reward pool
+   */
+  function accRewardPerShare(
+    RewardPool memory _rewardPool_memory
+  ) internal view returns (uint256 poolAccRewardPerShare) {
+    poolAccRewardPerShare = _rewardPool_memory.accRewardPerShare;
+    // Make sure to update a pool using the `updatePoolRewardVariables` once before updating it's allocPoint to 0
+    if (_rewardPool_memory.globalPoolBalance != 0 && _rewardPool_memory.allocPoint != 0) {
+      uint256 durationSinceLastReward = lastRewardApplicableTime(_rewardPool_memory.rewardEndTime) -
+        uint256(_rewardPool_memory.lastRewardTime);
+
+      uint256 poolAccRewardsInDuration = (durationSinceLastReward *
+        (phaseInfo[_rewardPool_memory.phase]).rewardEmissionRate *
+        _rewardPool_memory.allocPoint) / phaseInfo[_rewardPool_memory.phase].totalAllocPoint;
+
+      poolAccRewardPerShare +=
+        (poolAccRewardsInDuration * 10 ** _rewardPool_memory.rewardPrecision) /
+        _rewardPool_memory.globalPoolBalance;
+    }
+  }
+
+  /** @dev Updates the reward variables of a reward pool
+   * @param _assetId: assetId of the reward pool
+   *
+   */
+  function updatePoolRewardVariables(uint256 _assetId) public returns (RewardPool memory rewardPool_memory) {
+    rewardPool_memory = rewardPoolInfo[_assetId];
+
+    // COMPUTE POOL'S `accRewardPerShare` and `lastRewardTime`
+    if (block.timestamp > rewardPool_memory.lastRewardTime) {
+      rewardPool_memory.accRewardPerShare = accRewardPerShare(rewardPool_memory);
+      rewardPool_memory.lastRewardTime = uint40(lastRewardApplicableTime(rewardPool_memory.rewardEndTime));
+
+      // UPDATE IN STORAGE
+      rewardPoolInfo[_assetId].accRewardPerShare = rewardPool_memory.accRewardPerShare;
+      rewardPoolInfo[_assetId].lastRewardTime = rewardPool_memory.lastRewardTime;
+
+      emit LogUpdatePoolRewards({
+        assetId: _assetId,
+        lastRewardTime: rewardPool_memory.lastRewardTime,
+        globalPoolBalance: rewardPool_memory.globalPoolBalance,
+        accRewardPerShare: rewardPool_memory.accRewardPerShare
+      });
+    }
+  }
+
+  /** @dev Updates all the reward variables of reward pools in a given phase
+   * @param _assetIds: Array of assetId of all reward pools currently in `_phase`
+   *
+   * Called whenever a new reward pool is added to the PMC {Func: addRewardPool}
+   * OR
+   * the allocPoint for an existing reward pool is updated {Func: updateRewardPoolAllocations}
+   * This is because the rewards for all pools is affected by the above two actions
+   */
+  function massUpdatePoolRewardVariables(uint256[] calldata _assetIds) public {
+    uint256 len = _assetIds.length;
+
+    for (uint256 i = 0; i < len; ++i) {
+      uint256 poolPhase = rewardPoolInfo[_assetIds[i]].phase;
+      require(poolPhase == 1 || poolPhase == 2, 'Invalid Pool'); // Note: check if needed
+      updatePoolRewardVariables(_assetIds[i]);
+    }
+  }
+
+  /* ========== MUTATIVE  FUNCTIONS ========== */
+
+  /**
+   * @dev See {IPrivacyMining-depositAssetToPool}
+   * @param _user: Assset id of asset reward pool in SMASP
+   * @param _assetId: Assset id of asset reward pool in SMASP
+   * @param _amount: Deposit amount of user in SMASP to be registered for the pool
+   *
+   * Updates the pool balance of the pool and user based on `_amount`
+   * Emits a {LogDepositToPool} event
+   *
+   * Requirements:
+   * - can only be called by SMASP contract
+   * - rewardPool for `_assetId` must be in phase I
+   * - reward period for phase I must not have completed already
+   */
+  function depositAssetToPool(
+    address _user,
+    uint256 _assetId,
+    uint256 _amount
+  ) public override onlyValidPhase(_assetId, 1) beforePeriodFinished(_assetId) nonReentrant {
+    require(msg.sender == SMASP, 'Only SMASP can call');
+
+    RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
+    UserPoolInfo storage userPoolInfo_storage = userPoolInfo[_user][_assetId];
+
+    // In first ever deposit: Register user to phase 1 w.r.t the reward pool
+    if (userPoolInfo_storage.phase != 1) {
+      // Register the user to phase 1
+      _enterPhase(userPoolInfo_storage, 1);
+      // Assign the user to have same cycle as reward pool
+      userPoolInfo_storage.cycle = rewardPool_memory.cycle;
     }
 
-    /**
-     * @dev Maps a user address and assetId to the struct UserPoolState
-     */
-    mapping(address => mapping(uint256 => UserPoolState)) public userPoolState;
+    // Verify that the user's cycle is same w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle) revert IneligibleUser({assetId: _assetId, user: _user});
 
-    /* ========== CONSTRUCTOR ========== */
+    // Update userPoolBalance
+    userPoolInfo_storage.userPoolBalance += _amount;
 
-    /**
-     * @dev Sets the values for {silentToken] {smaspContract} and {rewardsDistributor}
-     * All three of these values are immutable: they can only be set once during construction
-     *
-     * Requirements:
-     * `_silentToken`, `_smaspContract` and `rewardsDistributor` cannot be the zero address
-     */
-    constructor(
-        address _silentToken,
-        address _smaspContract,
-        address _rewardsDistributor
-    ) {
-        require(_silentToken != address(0));
-        require(_smaspContract != address(0));
-        require(_rewardsDistributor != address(0));
+    // Update user's pool rewardDebt
+    userPoolInfo_storage.rewardDebt += int256(
+      FullMath.mulDiv(_amount, rewardPool_memory.accRewardPerShare, 10 ** rewardPool_memory.rewardPrecision)
+    );
 
-        silentToken = IERC20(_silentToken);
-        smaspContract = _smaspContract;
-        rewardsDistributor = _rewardsDistributor;
+    // Update globalPoolBalance
+    rewardPoolInfo[_assetId].globalPoolBalance += _amount;
+
+    // Emit an event to notify
+    emit LogDepositToPool({user: _user, assetId: _assetId, amount: _amount});
+  }
+
+  /**
+   * @dev See {IPrivacyMining-stakeSilentToPool}
+   * @param _assetId: Assset id of asset reward pool
+   * @param _amount: Amount of Silent tokens to be staked
+   *
+   * Lets user stake their Silent tokens to a reward pool
+   *
+   * - _amount cannot be zero
+   * - reward pool must be in phase 2
+   * - the current reward period shouldn't have completed
+   * - the contract must be in unpaused state
+   * - the user must have participated in phase 1 of the reward pool:
+   *   UserPoolState.phase should not be zero
+   * - the user must have collected voucher rewards in phase 1
+   *
+   * Updates the balance of user and the pool based on `_amount`
+   *
+   * Emits a {LogSilentStakedToPool} event indicating the staked amount
+   */
+  function stakeSilentToPool(
+    uint256 _assetId,
+    uint256 _amount
+  ) external override onlyValidPhase(_assetId, 2) beforePeriodFinished(_assetId) nonReentrant {
+    RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
+    UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][_assetId];
+
+    // Verify that the user is in the same cycle w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle) {
+      // User can enter the same cycle only after depositing some amount of asset to pool
+      revert IneligibleUser({assetId: _assetId, user: msg.sender});
     }
 
-    /* ========== EXTERNAL VIEW FUNCTIONS ========== */
-
-    /**
-     * @dev Fetches information of all assset reward pools deployed in the PMC
-     */
-    function getDeployedPools() external view returns (RewardPool[] memory) {
-        uint256[] memory _deployedPools = deployedPools;
-        RewardPool[] memory rewardPools = new RewardPool[](
-            _deployedPools.length
-        );
-
-        for (uint256 i = 0; i < _deployedPools.length; ) {
-            rewardPools[i] = rewardForPool[_deployedPools[i]];
-            unchecked {
-                ++i;
-            }
-        }
-        return rewardPools;
+    // If the user is not in the same phase w.r.t reward pool
+    if (userPoolInfo_storage.phase != 2) {
+      // Register the user in phase 2
+      _enterPhase(userPoolInfo_storage, 2);
+      // Retain the voucherBalance of user in whole number: divide by ACC_VOUCHER_PRECISION
+      userPoolInfo_storage.userVoucherBalance = uint240(
+        1 + userPoolInfo_storage.userVoucherBalance / 10 ** (ACC_VOUCHER_PRECISION)
+      );
     }
 
-    /**
-     * @dev Fetches the information of an asset reward pool in PMC
-     * @param _assetId: Assset id of asset reward pool in SMASP
-     */
-    function getPoolStatus(uint256 _assetId)
-        external
-        view
-        returns (RewardPool memory)
-    {
-        return rewardForPool[_assetId];
+    // Compute the effective stake for user in the reward pool
+    // [ Effective stake = ( user's total silent stake * user's voucher balance ) w.r.t. reward pool ]
+    uint256 userEffectiveStakeAmount = _amount * userPoolInfo_storage.userVoucherBalance;
+
+    // Add the effective stake amount to the userPoolBalance
+    userPoolInfo_storage.userPoolBalance += userEffectiveStakeAmount;
+    // Compute the user's new rewardDebt in the pool and update it
+    userPoolInfo_storage.rewardDebt += int256(
+      (userEffectiveStakeAmount * rewardPool_memory.accRewardPerShare) / 10 ** rewardPool_memory.rewardPrecision
+    );
+
+    // Add the effective stake amount to the rewardPool's globalPoolBalance
+    rewardPoolInfo[_assetId].globalPoolBalance += userEffectiveStakeAmount;
+
+    // Transfer the staked amount from user to the contract
+    SILENT.safeTransferFrom(msg.sender, address(this), _amount);
+    // Emit an event to notify
+    emit LogSilentStakedToPool({user: msg.sender, assetId: _assetId, amount: _amount});
+  }
+
+  /**
+   * @dev See {IPrivacyMining-unstakeSilentFromPool}
+   * @param _assetId: Assset id of asset reward pool
+   * @param _amount: Amount of Silent tokens to be unstaked
+   *
+   * Lets user(caller) unstake their Silent tokens from a reward pool
+   *
+   * Requirements
+   * - reward pool must be in phase 2
+   * - `_amount` cannot be less than user's total stake in the pool
+   * - user must be in phase 2 for the given reward pool
+   *
+   * Updates the balance of user and the pool based on `_amount` powered by
+   * user's total voucher balance
+   * Transfers `_amount` Silent tokens from contract to the user
+   *
+   * Emits a {LogSilentUnstakedFromPool} event indicating the updated balance
+   */
+  function unstakeSilentFromPool(
+    uint256 _assetId,
+    uint256 _amount
+  ) external override nonReentrant onlyValidPhase(_assetId, 2) {
+    RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
+    UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][_assetId];
+
+    // Verify that the user is in same cycle w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle)
+      revert IneligibleUser({assetId: _assetId, user: msg.sender});
+
+    // Verify that user is in phase 2 w.r.t the reward pool
+    if (userPoolInfo_storage.phase != 2) revert IneligibleUser({assetId: _assetId, user: msg.sender});
+
+    // Compute the original amount staked in the pool by the user
+    uint256 userOriginalStake;
+    unchecked {
+      userOriginalStake = userPoolInfo_storage.userPoolBalance / userPoolInfo_storage.userVoucherBalance;
     }
 
-    /**
-     * @dev Fetches the pending rewards for a user for a reward pool
-     * @param _assetId: Assset id of asset reward pool in SMASP
-     */
-    function getPendingRewards(address user, uint256 _assetId)
-        external
-        view
-        returns (uint256 _rewardsPending)
-    {
-        require(
-            userPoolState[user][_assetId].phase ==
-                rewardForPool[_assetId].phase,
-            "Phase mismatch"
-        );
-        (_rewardsPending, , ) = rewardsPending(
-            userPoolState[user][_assetId],
-            rewardForPool[_assetId],
-            _assetId
-        );
+    // Verify that the staked amount is greater than the amount being unstaked
+    if (_amount == 0 || userOriginalStake < _amount) revert InvalidAmount();
+
+    // Compute the effective amount being unstaked
+    uint256 userEffectiveUnstakeAmount = _amount * userPoolInfo_storage.userVoucherBalance;
+
+    // Deduce effective unstake amount from userPoolBalance
+    userPoolInfo_storage.userPoolBalance -= userEffectiveUnstakeAmount;
+    // Update user's reward debt in the pool
+    userPoolInfo_storage.rewardDebt -= int256(
+      (userEffectiveUnstakeAmount * rewardPool_memory.accRewardPerShare) / 10 ** rewardPool_memory.rewardPrecision
+    );
+    // Update the rewardPool's globalPoolBalance
+    rewardPoolInfo[_assetId].globalPoolBalance -= userEffectiveUnstakeAmount;
+
+    // Transfer the unstaked amount from contract to user
+    SILENT.safeTransfer(msg.sender, _amount);
+    emit LogSilentUnstakedFromPool({user: msg.sender, assetId: _assetId, amount: _amount});
+  }
+
+  /**
+   * @dev See {IPrivacyMining-claimRewardsFromPool} -> lets a user claim rewards if it has been accumulated
+   * @param _assetId: Assset id of asset reward pool
+   *
+   * Note: Doesn't pay out the reward if user has accumulated zero reward in the given pool
+   *
+   * Emits a {LogRewardPaidByPool} event indicating the paid reward
+   * Updates the reward parameters of the reward pool
+   *
+   * Requirements:
+   * - user's phase in the reward pool should match reward pool's current phase
+   */
+  function claimRewardsFromPool(uint256 _assetId) external override nonReentrant {
+    RewardPool memory rewardPool_memory = updatePoolRewardVariables(_assetId);
+    UserPoolInfo storage userPoolInfo_storage = userPoolInfo[msg.sender][_assetId];
+
+    // Verify that the user is in same cycle w.r.t reward pool
+    if (userPoolInfo_storage.cycle != rewardPool_memory.cycle)
+      revert IneligibleUser({assetId: _assetId, user: msg.sender});
+
+    // Verify that the user is in same phase w.r.t the reward pool
+    if (userPoolInfo_storage.phase != rewardPool_memory.phase)
+      revert InvalidPhase({
+        assetId: _assetId,
+        assumedPhase: userPoolInfo_storage.phase,
+        correctPhase: rewardPool_memory.phase
+      });
+
+    int256 userAccumulatedRewardSinceGenesis = int256(
+      FullMath.mulDiv(
+        userPoolInfo_storage.userPoolBalance,
+        rewardPool_memory.accRewardPerShare,
+        10 ** rewardPool_memory.rewardPrecision
+      )
+    );
+
+    // Compute the user's accumulated reward since user's last claimed block
+    uint256 userPendingRewardSinceLastClaimedBlock = (userAccumulatedRewardSinceGenesis -
+      userPoolInfo_storage.rewardDebt).toUint256();
+
+    // Update the user's reward debt
+    userPoolInfo_storage.rewardDebt = userAccumulatedRewardSinceGenesis;
+
+    // If the pending reward is > 0, transfer it to the user
+    if (userPendingRewardSinceLastClaimedBlock != 0) {
+      if (rewardPool_memory.phase == 2) {
+        SILENT.safeTransferFrom(TREASURY, msg.sender, userPendingRewardSinceLastClaimedBlock);
+      } else if (rewardPool_memory.phase == 1) {
+        userPoolInfo_storage.userVoucherBalance += uint240(userPendingRewardSinceLastClaimedBlock);
+      }
+      emit LogRewardPaidByPool({assetId: _assetId, user: msg.sender, amount: userPendingRewardSinceLastClaimedBlock});
+    }
+  }
+
+  /* ========== OWNER RESTRICTED FUNCTIONS ========== */
+
+  /**
+   * @dev See {IPrivacyMining-addRewardPool}
+   *
+   * @param _assetId: assetId of the reward pool
+   * @param _phase : _phase to be initialized
+   * @param _allocPoint: reward allocation point for the reward pool
+   *
+   * Lets the owner of the pool add a new reward pool to PMC
+   * or upgrade a reward pool from phase one to two
+   *
+   * Emits the event {LogRewardPoolAdded} denoting the _assetId, _phase and _allocPoint of the rewardPool
+   *
+   * Requirements:
+   * - a corresponding asset pool in SMASP should exist for provided `_assetId`
+   * - `_phase` must either be 1 or 2
+   * - The rewardPool's initial phase must be 1 less than `_phase`
+   */
+  function addRewardPool(
+    uint256 _assetId,
+    uint256 _phase,
+    uint8 _allocPoint
+  ) external onlyOwner onlyValidPhase(_assetId, _phase - 1) {
+    require(_allocPoint > 0, 'Invalid AllocPoint');
+    RewardPool storage rewardPool_storage = rewardPoolInfo[_assetId];
+
+    // If the Reward Pool is getting added to PMC for phase one
+    if (_phase == 1) {
+      // Verify that a corresponding asset pool exists in SMASP
+      // This check can be limited to first ever reward cycle
+      require(ISMASP(SMASP).assetIdToToken(_assetId) != address(0), 'Invalid _assetId');
+      // Update the reward cycle of the pool
+      rewardPool_storage.cycle += 1;
+      // Set the reward precision for the reward pool
+      rewardPool_storage.rewardPrecision = uint8(ACC_VOUCHER_PRECISION);
+    } else if (_phase == 2) {
+      // Verify that the current reward period has already ended
+      if (block.timestamp <= rewardPoolInfo[_assetId].rewardEndTime)
+        revert RewardPeriodOngoing({
+          assetId: _assetId,
+          currentTimestamp: block.timestamp,
+          rewardEndTimestamp: rewardPoolInfo[_assetId].rewardEndTime
+        });
+      // Reset reward pool's accRewardPerShare and globalPoolBalance
+      // Note: reward pool's current cycle is retained from phase 1
+      rewardPool_storage.accRewardPerShare = 0;
+      rewardPool_storage.globalPoolBalance = 0;
+      rewardPool_storage.rewardPrecision = uint8(ACC_SILENT_PRECISION);
+      // Deduce its previous allocPoint from the total allocPoint of phase 1
+      // Redundant step if pool's allocPoint was already updated to zero in func: `updateRewardPoolAllocations`
+      phaseInfo[1].totalAllocPoint -= uint128(rewardPool_storage.allocPoint);
+    } else {
+      revert InvalidPhase({assetId: _assetId, assumedPhase: _phase - 1, correctPhase: rewardPool_storage.phase});
     }
 
-    /**
-     * @dev Just a helper function for testing purposes
-     * @param _assetId: Assset id of asset reward pool in SMASP
-     */
-    function changePoolToPhaseTwo(uint256 _assetId) external {
-        rewardForPool[_assetId].periodFinish = uint48(block.timestamp);
+    // Add to the totalAllocPoint for the phase
+    phaseInfo[_phase].totalAllocPoint += _allocPoint;
+
+    // Initialize the attributes for the pool's RewardPool struct
+    rewardPool_storage.phase = uint8(_phase);
+    rewardPool_storage.allocPoint = _allocPoint;
+    rewardPool_storage.rewardStartTime = uint40(block.timestamp); // NOTE: This could be initialised in the very first deposit/stake to a pool
+    rewardPool_storage.lastRewardTime = uint40(block.timestamp);
+    rewardPool_storage.rewardEndTime = uint40(block.timestamp + GLOBAL_REWARD_PERIOD);
+
+    // Emit an event to notify
+    emit LogRewardPoolAdded({assetId: _assetId, phase: _phase, allocPoint: _allocPoint});
+  }
+
+  /**
+   * @dev Lets the owner update the allocation points for a reward pool
+   *
+   * @param _assetId: assetId of the reward pool
+   * @param _phase: expected phase of the reward pool
+   * @param _newAllocPoint: reward allocation point for the reward pool
+   *
+   * Updates the reward pool variables
+   *
+   * Emits the event {LogUpdateRewardPool} denoting
+   * the _assetId and _newAllocPoint of the rewardPool
+   *
+   * Requirements:
+   * - reward pool's phase must match provided `_phase`
+   *
+   * NOTE: Owner should call the function {massupdatePoolRewardVariables} before calling this function
+   * whenever this function is called
+   * Maybe a pre-requisite should be that the
+   */
+  function updateRewardPoolAllocations(
+    uint256 _assetId,
+    uint256 _phase,
+    uint8 _newAllocPoint
+  ) external onlyOwner onlyValidPhase(_assetId, _phase) {
+    RewardPool storage rewardPool_storage = rewardPoolInfo[_assetId];
+
+    // Verify that _phase is either 1 or 2 or else allocPoint can be set for a non-existent pool
+    if (_phase != 1 && _phase != 2)
+      revert InvalidPhase({assetId: _assetId, assumedPhase: _phase, correctPhase: rewardPool_storage.phase});
+
+    // AllocPoint cannot be updated until the current reward period is finished
+    if (block.timestamp <= rewardPool_storage.rewardEndTime)
+      revert RewardPeriodOngoing({
+        assetId: _assetId,
+        currentTimestamp: block.timestamp,
+        rewardEndTimestamp: rewardPool_storage.rewardEndTime
+      });
+
+    // Update the total allocations for the phase
+    phaseInfo[_phase].totalAllocPoint =
+      (phaseInfo[_phase].totalAllocPoint - rewardPool_storage.allocPoint) +
+      _newAllocPoint;
+
+    // Upgrade the reward pool's allocPoint in storage to _newAllocPoint
+    rewardPool_storage.allocPoint = _newAllocPoint;
+
+    // If the _newAllocPoint is zero
+    if (_newAllocPoint == 0) {
+      // If the _phase is 2
+      if (_phase == 2) {
+        // Delete the reward pool variables except for cycle
+        // allocPoint has already been updated to zero before
+        rewardPool_storage.phase = 0;
+        rewardPool_storage.rewardPrecision = 0;
+        rewardPool_storage.rewardStartTime = 0;
+        rewardPool_storage.lastRewardTime = 0;
+        rewardPool_storage.rewardEndTime = 0;
+        rewardPool_storage.accRewardPerShare = 0;
+        rewardPool_storage.globalPoolBalance = 0;
+      }
+    } else {
+      // Renew the pool's reward period
+      rewardPool_storage.rewardStartTime = uint40(block.timestamp);
+      rewardPool_storage.rewardEndTime = uint40(block.timestamp + GLOBAL_REWARD_PERIOD);
     }
 
-    /* ========== MUTATIVE FUNCTIONS ========== */
+    // Emit an event to notify
+    emit LogUpdateRewardPool({assetId: _assetId, allocPoint: _newAllocPoint});
+  }
 
-    /**
-     * @dev Registers a user in Phase two of a reward pool
-     * @param userPoolState__: UserPoolState for user for the pool
-     * the UserPoolState.phase is changed to 2
-     * the UserPoolState.userPoolVoucherBalance is retained from phase 1
-     * all other UserPoolState values are reset to default/zeroes
-     *
-     * Requirements:
-     * - User must have collected vouchers during phase 1 of the pool
-     */
-    function _enterPhaseTwo(UserPoolState storage userPoolState__) internal {
-        if (userPoolState__.userPoolVoucherBalance == 0)
-            revert IneligibleUser();
-
-        // userPoolVoucherBalance remains unchanged, all others change
-        userPoolState__.phase = 2;
-        userPoolState__.userPoolRewardPerTokenPaid = 0;
-        userPoolState__.userPoolAccumulatedRewards = 0;
-        userPoolState__.userPoolBalance = 0;
-        // userPoolState__.userPoolVoucherBalance = userPoolState__
-        //     .userPoolVoucherBalance;
-        userPoolState__.userPoolVoucherBalance =
-            userPoolState__.userPoolVoucherBalance /
-            1e18; // [ Patch: Round off for now]
-    }
-
-    /**
-     * @dev See {IPrivacyMining-depositAssetToPool}
-     * @param user: Assset id of asset reward pool in SMASP
-     * @param _assetId: Assset id of asset reward pool in SMASP
-     * @param amount: Deposit amount of user in SMASP to be registered for the pool
-     *
-     * Updates the pool balance of the pool and user based on `amount`
-     * Emits a {PoolBalanceChanged} event
-     *
-     * Requirements:
-     * - can only be called by SMASP contract
-     * - rewardPool for `_assetId` must be in phase I
-     * - reward period for phase I must not have completed already
-     */
-    function depositAssetToPool(
-        address user,
-        uint256 _assetId,
-        uint256 amount
-    )
-        external
-        virtual
-        override
-        nonReentrant
-        onlyValidPhase(_assetId, 1)
-        beforePeriodFinished(_assetId)
-    {
-        require(msg.sender == smaspContract, "Caller not SMASP");
-
-        UserPoolState storage userPoolState__ = userPoolState[user][_assetId];
-        RewardPool storage rewardForPool__ = rewardForPool[_assetId];
-
-        if (userPoolState__.phase == 0) {
-            userPoolState__.phase = 1;
-        }
-
-        _updateReward(rewardForPool__, userPoolState__, _assetId, user);
-
-        rewardForPool__.globalPoolBalance += amount;
-        userPoolState__.userPoolBalance += amount;
-
-        emit PoolBalanceChanged(user, _assetId, true, amount);
-    }
-
-    /**
-     * @dev See {IPrivacyMining-stakeSilentToPool}
-     * @param _assetId: Assset id of asset reward pool
-     * @param amount: Amount of Silent tokens to be staked
-     *
-     * Lets user stake their Silent tokens to a reward pool
-     *
-     * - amount cannot be zero amount
-     * - reward pool must be in phase 2
-     * - the current reward period shouldn't have completed
-     * - the contract must be in unpaused state
-     * - the user must have participated in phase 1 of the reward pool:
-     *   UserPoolState.phase should not be zero
-     * - the user must have collected voucher rewards in phase 1
-     *
-     * Updates the balance of user and the pool based on `amount`
-     *
-     * Emits a {PoolBalanceChanged} event indicating the updated balance
-     */
-    function stakeSilentToPool(uint256 _assetId, uint256 amount)
-        external
-        virtual
-        override
-        nonReentrant
-        onlyValidPhase(_assetId, 2)
-        beforePeriodFinished(_assetId)
-        whenNotPaused
-    {
-        if (amount == 0) revert InvalidAmount();
-        UserPoolState storage userPoolState__ = userPoolState[msg.sender][
-            _assetId
-        ];
-        RewardPool storage rewardForPool__ = rewardForPool[_assetId];
-
-        if (userPoolState__.phase == 0) revert IneligibleUser();
-        if (userPoolState__.phase == 1) {
-            _enterPhaseTwo(userPoolState__);
-        }
-
-        _updateReward(rewardForPool__, userPoolState__, _assetId, msg.sender);
-
-        uint256 userEffectiveStakeAmount = amount *
-            userPoolState__.userPoolVoucherBalance;
-
-        userPoolState__.userPoolBalance += userEffectiveStakeAmount;
-        rewardForPool__.globalPoolBalance += userEffectiveStakeAmount;
-
-        silentToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit PoolBalanceChanged(msg.sender, _assetId, true, amount);
-    }
-
-    /**
-     * @dev See {IPrivacyMining-unstakeSilentFromPool}
-     * @param _assetId: Assset id of asset reward pool
-     * @param amount: Amount of Silent tokens to be unstaked
-     *
-     * Lets user unstake their Silent tokens from a reward pool
-     *
-     * Requirements
-     * - reward pool must be in phase 2
-     * - `amount` cannot be less than user's total stake in the pool
-     * - user must be in phase 2 for the given reward pool
-     *
-     * Updates the balance of user and the pool based on `amount` powered by
-     * user's total voucher balance
-     * Transfers `amount` Silent tokens from contract to the user
-     *
-     * Emits a {PoolBalanceChanged} event indicating the updated balance
-     */
-    function unstakeSilentFromPool(uint256 _assetId, uint256 amount)
-        external
-        virtual
-        override
-        nonReentrant
-        onlyValidPhase(_assetId, 2)
-    {
-        UserPoolState storage userPoolState__ = userPoolState[msg.sender][
-            _assetId
-        ];
-        RewardPool storage rewardForPool__ = rewardForPool[_assetId];
-
-        if (userPoolState__.phase != 2) revert IneligibleUser();
-
-        uint256 userOriginalStake;
-        unchecked {
-            userOriginalStake =
-                userPoolState__.userPoolBalance /
-                userPoolState__.userPoolVoucherBalance;
-        }
-
-        console.log(
-            "userOriginalStake: %s , amount: %s",
-            userOriginalStake,
-            amount
-        );
-
-        if (amount == 0 || userOriginalStake < amount) revert InvalidAmount();
-
-        _updateReward(rewardForPool__, userPoolState__, _assetId, msg.sender);
-
-        uint256 userEffectiveUnstakeAmount = amount *
-            userPoolState__.userPoolVoucherBalance;
-
-        rewardForPool[_assetId].globalPoolBalance -= userEffectiveUnstakeAmount;
-        userPoolState__.userPoolBalance -= userEffectiveUnstakeAmount;
-
-        silentToken.safeTransfer(msg.sender, amount);
-        emit PoolBalanceChanged(msg.sender, _assetId, false, amount);
-    }
-
-    /**
-     * @dev See {IPrivacyMining-claimRewards} -> lets a user claim rewards if it has been accumulated
-     * @param _assetId: Assset id of asset reward pool
-     *
-     * Note: Doesn't pay out the reward if user has accumulated zero reward in the given pool
-     *
-     * Emits a {RewardPaid} event indicating the paid reward
-     * Updates the reward parameters of the reward pool
-     *
-     * Requirements:
-     * - user's phase in the reward pool should match reward pool's current phase
-     */
-    function claimRewards(uint256 _assetId)
-        external
-        virtual
-        override
-        nonReentrant
-    {
-        UserPoolState storage userPoolState__ = userPoolState[msg.sender][
-            _assetId
-        ];
-        RewardPool storage rewardForPool__ = rewardForPool[_assetId];
-
-        // User can only claim within a phase
-        if (userPoolState__.phase != rewardForPool__.phase)
-            revert InvalidPhase(
-                _assetId,
-                userPoolState__.phase,
-                rewardForPool__.phase
-            );
-
-        _updateReward(rewardForPool__, userPoolState__, _assetId, msg.sender);
-
-        uint256 reward = userPoolState__.userPoolAccumulatedRewards;
-
-        if (reward != 0) {
-            userPoolState__.userPoolAccumulatedRewards = 0;
-            if (userPoolState__.phase == 2) {
-                silentToken.safeTransfer(msg.sender, reward);
-            } else if (userPoolState__.phase == 1) {
-                userPoolState__.userPoolVoucherBalance += uint248(reward);
-            }
-            emit RewardPaid(msg.sender, _assetId, reward);
-        }
-    }
-
-    /* ========== PUBLIC VIEW FUNCTIONS ========== */
-
-    /**
-     * @dev Computes the last reward claimable time for a reward pool
-     * @param _assetId: Assset id of asset reward pool
-     */
-    function lastTimeRewardApplicable(uint256 _assetId)
-        public
-        view
-        returns (uint48)
-    {
-        return
-            uint48(
-                Math.min(block.timestamp, rewardForPool[_assetId].periodFinish)
-            );
-    }
-
-    /* ========== INTERNAL FUNCTIONS ========== */
-
-    /**
-     * @dev Computes the running sum of rewardRate per token of a reward pool
-     * since it was last updated
-     * @param rewardForPool__: Storage pointer to the rewardForPool_
-     * @param _lastTimeRewardApplicable: last applicable reward time for pool
-     */
-    function rewardPerToken(
-        RewardPool storage rewardForPool__,
-        uint48 _lastTimeRewardApplicable
-    ) internal view returns (uint256) {
-        if (rewardForPool__.globalPoolBalance == 0) {
-            return rewardForPool__.rewardPerTokenStored;
-        }
-
-        return
-            rewardForPool__.rewardPerTokenStored +
-            ((uint256(rewardForPool__.rewardRate) *
-                (_lastTimeRewardApplicable - rewardForPool__.lastUpdateTime) *
-                1e25) / rewardForPool__.globalPoolBalance);
-    }
-
-    /**
-     * @dev Computes the pending rewards for a user in a reward pool
-     *
-     * @param userPoolState__: storage pointer to the user's userPoolState_ for the pool
-     * @param rewardForPool__: storage pointer to the user's rewardForPool[_assetId] of the pool
-     * @param _assetId: assetId of the reward pool
-     */
-    function rewardsPending(
-        UserPoolState storage userPoolState__,
-        RewardPool storage rewardForPool__,
-        uint256 _assetId
-    )
-        internal
-        view
-        returns (
-            uint256 _rewardsPending,
-            uint256 _rewardPerTokenStored,
-            uint48 _lastTimeRewardApplicable
-        )
-    {
-        _lastTimeRewardApplicable = lastTimeRewardApplicable(_assetId);
-        _rewardPerTokenStored = rewardPerToken(
-            rewardForPool__,
-            _lastTimeRewardApplicable
-        );
-        // k*(s-p[user])
-        _rewardsPending =
-            ((userPoolState__.userPoolBalance *
-                (rewardPerToken(rewardForPool__, _lastTimeRewardApplicable) -
-                    userPoolState__.userPoolRewardPerTokenPaid)) / 1e25) +
-            userPoolState__.userPoolAccumulatedRewards;
-    }
-
-    /**
-     * @dev Updates the reward each time any user interacts with the SC [ deposit/stake/unstake/claim]
-     * and when the owner updates the reward pool [updateRewardPool]
-     *
-     * @param userPoolState__: storage pointer to the user's userPoolState_ for the pool
-     * @param rewardForPool__: storage pointer to the user's rewardForPool[_assetId] of the pool
-     * @param _assetId: assetId of the reward pool
-     * @param user : address of the user who initiated the call
-     */
-    function _updateReward(
-        RewardPool storage rewardForPool__,
-        UserPoolState storage userPoolState__,
-        uint256 _assetId,
-        address user
-    ) internal {
-        (
-            uint256 _rewardsPending,
-            uint256 _rewardPerTokenStored,
-            uint48 _lastTimeRewardApplicable
-        ) = rewardsPending(userPoolState__, rewardForPool__, _assetId);
-
-        rewardForPool__.lastUpdateTime = _lastTimeRewardApplicable;
-        rewardForPool__.rewardPerTokenStored = _rewardPerTokenStored;
-
-        if (user != address(0)) {
-            // store the pending rewards for the user in `userPoolAccumulatedRewards`
-            userPoolState__.userPoolAccumulatedRewards = _rewardsPending;
-            // updae the `userPoolRewardPerTokenPaid` with later `rewardPerTokenStored`
-            userPoolState__.userPoolRewardPerTokenPaid = _rewardPerTokenStored;
-        }
-    }
-
-    /* ========== MODIFIERS ========== */
-
-    /**
-     * @dev Checks if the reward pool for the given `_assetId` is in given `_phase`
-     */
-    modifier onlyValidPhase(uint256 _assetId, uint8 _phase) {
-        uint8 rewardPoolPhase = rewardForPool[_assetId].phase;
-        if (rewardPoolPhase != _phase)
-            revert InvalidPhase(_assetId, _phase, rewardPoolPhase);
-        _;
-    }
-
-    /**
-     * @dev Checks if the reward period for the given `_assetId` has already finished
-     */
-    modifier beforePeriodFinished(uint256 _assetId) {
-        if (block.timestamp > rewardForPool[_assetId].periodFinish)
-            revert RewardPeriodFinished();
-        _;
-    }
-
-    /* ========== RESTRICTED FUNCTIONS ========== */
-
-    /**
-     * @dev See {IPrivacyMining-createAssetRewardPool}
-     *
-     * @param _assetId: assetId of the reward pool
-     * @param _phase : new _phase to be initialized
-     * @param reward: reward amount (in 1e18 decimals) to be distributed
-     * @param _rewardsDuration: duration of the reward period
-     *
-     * Lets the owner of the pool initialize a new Asset-Reward Pool
-     * or update the phase of an asset reward pool from 1 to 2
-     *
-     * Emits the event {RewardAdded} denoting the added reward amount and
-     * the assetId of therewardPool  for which it is initialized
-     *
-     * Requirements:
-     * - a corresponding asset pool in SMASP should exist for provided `_assetId`
-     * - `reward` must be greater than `rewardsDuration`
-     * - `_phase` must either be 1 or 2
-     * - The rewardPool's phase must be 1 less than passed `_phase`
-     * - If rewardPool is being created for phase 2, phase 1's current
-     *   reward-period should have already gotten completed
-     */
-    function createAssetRewardPool(
-        uint256 _assetId,
-        uint8 _phase,
-        uint256 reward,
-        uint48 _rewardsDuration
-    ) external onlyOwner {
-        require(reward > _rewardsDuration, "Invalid Duration");
-
-        RewardPool storage rewardForPool__ = rewardForPool[_assetId];
-
-        if (rewardForPool__.phase != _phase - 1)
-            revert InvalidPhase(_assetId, _phase, rewardForPool__.phase);
-
-        if (_phase == 1) {
-            require(
-                ISMASP(smaspContract).assetIdToToken(_assetId) != address(0),
-                "Invalid Asset Pool"
-            );
-            deployedPools.push(_assetId);
-        } else if (_phase == 2) {
-            if (block.timestamp < rewardForPool__.periodFinish)
-                revert("Phase One Ongoing");
-            silentToken.safeTransferFrom(msg.sender, address(this), reward);
-        } else {
-            revert InvalidPhase(_assetId, _phase, rewardForPool__.phase);
-        }
-
-        // Initialize the reward attributes for the pool
-        rewardForPool__.phase = _phase;
-        rewardForPool__.rewardsDuration = _rewardsDuration;
-        rewardForPool__.periodFinish = uint48(
-            block.timestamp + _rewardsDuration
-        );
-        rewardForPool__.lastUpdateTime = uint48(block.timestamp);
-        rewardForPool__.rewardRate = reward / _rewardsDuration;
-        rewardForPool__.rewardPerTokenStored = 0;
-        rewardForPool__.globalPoolBalance = 0;
-
-        emit RewardAdded(_assetId, reward);
-    }
-
-    /**
-     * @dev See {IPrivacyMining-updateRewardPool}
-     * @param _assetId: assetId of the reward pool
-     * @param reward: reward amount to be added/updated
-     * Lets the owner of the pool update the reward for an existing reward pool
-     * Might change the caller to be rewardsDistributor
-     *
-     * Emits the event {RewardAdded} denoting the added reward amount and
-     *  phase at which the rewardPool is updated
-     *
-     * Adds the provided reward to exisiting reward if the reward period for the
-     *  pool is ongoing
-     * Initiates a new reward period with same rewardsDuration as before if the
-     *  current reward period for the rewardPool has already completed
-     */
-    function updateRewardPool(uint256 _assetId, uint256 reward)
-        external
-        onlyOwner
-    {
-        RewardPool storage rewardForPool__ = rewardForPool[_assetId];
-        // Extra storage read done just to call this function
-        _updateReward(
-            rewardForPool__,
-            userPoolState[address(0)][0],
-            _assetId,
-            address(0)
-        );
-
-        if (block.timestamp >= rewardForPool__.periodFinish) {
-            unchecked {
-                rewardForPool__.rewardRate =
-                    reward /
-                    rewardForPool__.rewardsDuration;
-            }
-            rewardForPool__.periodFinish =
-                uint48(block.timestamp) +
-                rewardForPool__.rewardsDuration;
-        } else {
-            uint256 remaining = uint256(rewardForPool__.periodFinish) -
-                block.timestamp;
-            uint256 leftover = remaining * rewardForPool__.rewardRate;
-            unchecked {
-                rewardForPool__.rewardRate = (reward + leftover) / remaining;
-            }
-        }
-
-        rewardForPool__.lastUpdateTime = uint48(block.timestamp);
-        emit RewardAdded(_assetId, reward);
-    }
+  /**
+   * @dev Lets the owner update the emissionRate for a phase in PMC
+   *
+   * @param _phase: one of the two global phases of reward pools in PMC
+   * @param _rewardEmissionRate: amount of vouchers (`_phase` == 1) or
+   * silent rewards (`_phase` == 2) to be distributed per second in PMC
+   *
+   * Emits the event {LogUpdateRewardEmissionRate} denoting the newly updated
+   * reward emission rate for the `_phase`
+   *
+   * NOTE: Owner whould update all the reward pools with the
+   * function: {massupdatePoolRewardVariables} before calling this function
+   */
+  function setRewardEmissionRate(uint256 _phase, uint128 _rewardEmissionRate) external onlyOwner {
+    require(_rewardEmissionRate > 0, 'Invalid Emission Rate');
+    require(_phase == 1 || _phase == 2, 'Invalid Phase');
+    phaseInfo[_phase].rewardEmissionRate = _rewardEmissionRate;
+    emit LogUpdateRewardEmissionRate({phase: _phase, rewardPerSecond: _rewardEmissionRate});
+  }
 }
